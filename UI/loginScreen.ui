@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="UsernameLabel">
+   <widget class="QLabel" name="usernameLabel">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -27,7 +27,7 @@
      <string>Korisničko ime:</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="UsernameLine">
+   <widget class="QLineEdit" name="usernameLine">
     <property name="geometry">
      <rect>
       <x>260</x>
@@ -37,7 +37,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="PasswordLabel">
+   <widget class="QLabel" name="passwordLabel">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -50,7 +50,7 @@
      <string>Lozinka:</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="PasswordLine">
+   <widget class="QLineEdit" name="passwordLine">
     <property name="geometry">
      <rect>
       <x>260</x>
@@ -73,7 +73,7 @@
      <string>Prijava</string>
     </property>
    </widget>
-   <widget class="QLabel" name="TextLabel">
+   <widget class="QLabel" name="textLabel">
     <property name="geometry">
      <rect>
       <x>250</x>

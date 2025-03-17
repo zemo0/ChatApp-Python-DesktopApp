@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="NameLabel">
+   <widget class="QLabel" name="nameLabel">
     <property name="geometry">
      <rect>
       <x>180</x>
@@ -27,7 +27,7 @@
      <string>Ime:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="SurnameLabel">
+   <widget class="QLabel" name="surnameLabel">
     <property name="geometry">
      <rect>
       <x>170</x>
@@ -40,7 +40,7 @@
      <string>Prezime:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="DateLabel">
+   <widget class="QLabel" name="dateLabel">
     <property name="geometry">
      <rect>
       <x>140</x>
@@ -66,7 +66,7 @@
      <string>Korisničko ime:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="PasswordLabel">
+   <widget class="QLabel" name="passwordLabel">
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -79,7 +79,7 @@
      <string>Lozinka:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="ConfirmPasswordLabel">
+   <widget class="QLabel" name="confirmPasswordLabel">
     <property name="geometry">
      <rect>
       <x>130</x>
@@ -92,7 +92,7 @@
      <string>Potvrdi lozinku:</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="NameLine">
+   <widget class="QLineEdit" name="nameLine">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -102,7 +102,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLineEdit" name="SurnameLine">
+   <widget class="QLineEdit" name="surnameLine">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -112,7 +112,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QDateEdit" name="DateEdit">
+   <widget class="QDateEdit" name="dateEdit">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -122,7 +122,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLineEdit" name="UsernameLine">
+   <widget class="QLineEdit" name="usernameLine">
     <property name="geometry">
      <rect>
       <x>300</x>
@@ -132,7 +132,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLineEdit" name="PasswordLine">
+   <widget class="QLineEdit" name="passwordLine">
     <property name="geometry">
      <rect>
       <x>300</x>
@@ -152,7 +152,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="InfoLabel">
+   <widget class="QLabel" name="infoLabel">
     <property name="geometry">
      <rect>
       <x>250</x>
@@ -165,7 +165,7 @@
      <string>Jesu lozinke iste, jesu dovoljno jake...</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="Button">
+   <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -181,7 +181,7 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>210</x>
       <y>440</y>
       <width>311</width>
       <height>16</height>
