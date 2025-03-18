@@ -1,5 +1,5 @@
 class User:
-    def __init__(self, user_id: int, username: str, name: str, surname: str, address: str, email: str, password: str):
+    def __init__(self, user_id: int, username: str, name: str, surname: str, address: str, email: str, password: str, role: str):
         self.__user_id = user_id
         self.__username = username
         self.__name = name
@@ -7,6 +7,7 @@ class User:
         self.__address = address
         self.__email = email
         self.__password = password
+        self.__role = role
 
     def set_user_id(self, user_id: int):
         self.__user_id = user_id
@@ -29,6 +30,9 @@ class User:
     def set_password(self, password: str):
         self.__password = password
 
+    def set_role(self, role: str):
+        self.__role = role
+
 
     def get_user_id(self) -> int:
         return self.__user_id
@@ -50,3 +54,19 @@ class User:
 
     def get_password(self) -> str:
         return self.__password
+
+    def get_role(self) -> str:
+        return self.__role
+
+    def getNameAndPassword(self):
+        return self.get_name(), self.get_password()
+    
+    def __repr__(self):  # For debugging
+        return f"User({self.__user_id}, {self.__username}, {self.__name}, {self.__surname}, {self.__address}, {self.__email}, {self.__password})"
+
+    def __str__(self):
+        return (f"User ID: {self.user_id}, "
+                f"Username: {self.username}, "
+                f"Name: {self.name} {self.surname}, "
+                f"Address: {self.address}, "
+                f"Email: {self.email}")

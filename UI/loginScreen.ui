@@ -76,7 +76,7 @@
    <widget class="QLabel" name="textLabel">
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>200</x>
       <y>390</y>
       <width>241</width>
       <height>61</height>
@@ -97,6 +97,19 @@
     </property>
     <property name="text">
      <string>linku</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="errorLabel">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>340</y>
+      <width>281</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>prazno</string>
     </property>
    </widget>
   </widget>
