@@ -86,7 +86,7 @@
      <string>Nemate račun? Registrirajte se na</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="linkLabel">
     <property name="geometry">
      <rect>
       <x>430</x>
@@ -95,8 +95,17 @@
       <height>41</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <bold>false</bold>
+      <underline>true</underline>
+     </font>
+    </property>
     <property name="text">
-     <string>linku</string>
+     <string/>
+    </property>
+    <property name="openExternalLinks">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QLabel" name="errorLabel">

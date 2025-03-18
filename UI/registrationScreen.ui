@@ -30,10 +30,10 @@
    <widget class="QLabel" name="surnameLabel">
     <property name="geometry">
      <rect>
-      <x>170</x>
+      <x>158</x>
       <y>100</y>
-      <width>49</width>
-      <height>16</height>
+      <width>61</width>
+      <height>20</height>
      </rect>
     </property>
     <property name="text">
@@ -53,7 +53,7 @@
      <string>Datum rođenja:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="UsernameLabel">
+   <widget class="QLabel" name="usernameLabel">
     <property name="geometry">
      <rect>
       <x>130</x>
@@ -142,7 +142,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit_5">
+   <widget class="QLineEdit" name="confirmPasswordLine">
     <property name="geometry">
      <rect>
       <x>300</x>
@@ -155,9 +155,9 @@
    <widget class="QLabel" name="infoLabel">
     <property name="geometry">
      <rect>
-      <x>250</x>
-      <y>360</y>
-      <width>201</width>
+      <x>230</x>
+      <y>390</y>
+      <width>261</width>
       <height>51</height>
      </rect>
     </property>
@@ -182,7 +182,7 @@
     <property name="geometry">
      <rect>
       <x>210</x>
-      <y>440</y>
+      <y>460</y>
       <width>311</width>
       <height>16</height>
      </rect>
@@ -190,6 +190,39 @@
     <property name="text">
      <string>Potvrdite email adresu, poslan vam je mail</string>
     </property>
+   </widget>
+   <widget class="QLabel" name="confirmPasswordLabel_2">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>360</y>
+      <width>41</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Rola</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboBox">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>360</y>
+      <width>111</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>User</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Admin</string>
+     </property>
+    </item>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

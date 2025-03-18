@@ -9,58 +9,58 @@ class User:
         self.__password = password
         self.__role = role
 
-    def set_user_id(self, user_id: int):
-        self.__user_id = user_id
+    def setUserId(self, userId: int):
+        self.__userId = userId
 
-    def set_username(self, username: str):
+    def setUsername(self, username: str):
         self.__username = username
 
-    def set_name(self, name: str):
+    def setName(self, name: str):
         self.__name = name
 
-    def set_surname(self, surname: str):
+    def setSurname(self, surname: str):
         self.__surname = surname
 
-    def set_address(self, address: str):
+    def setAddress(self, address: str):
         self.__address = address
 
-    def set_email(self, email: str):
+    def setEmail(self, email: str):
         self.__email = email
 
-    def set_password(self, password: str):
+    def setPassword(self, password: str):
         self.__password = password
 
-    def set_role(self, role: str):
+    def setRole(self, role: str):
         self.__role = role
 
 
-    def get_user_id(self) -> int:
-        return self.__user_id
+    def getUserId(self) -> int:
+        return self.__userId
 
-    def get_username(self) -> str:
+    def getUsername(self) -> str:
         return self.__username
 
-    def get_name(self) -> str:
+    def getName(self) -> str:
         return self.__name
 
-    def get_surname(self) -> str:
+    def getSurname(self) -> str:
         return self.__surname
 
-    def get_address(self) -> str:
+    def getAddress(self) -> str:
         return self.__address
 
-    def get_email(self) -> str:
+    def getEmail(self) -> str:
         return self.__email
 
-    def get_password(self) -> str:
+    def getPassword(self) -> str:
         return self.__password
 
-    def get_role(self) -> str:
+    def getRole(self) -> str:
         return self.__role
 
     def getNameAndPassword(self):
-        return self.get_name(), self.get_password()
-    
+        return self.getName(), self.getPassword()
+
     def __repr__(self):  # For debugging
         return f"User({self.__user_id}, {self.__username}, {self.__name}, {self.__surname}, {self.__address}, {self.__email}, {self.__password})"
 

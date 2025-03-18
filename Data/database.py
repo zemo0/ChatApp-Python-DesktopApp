@@ -21,13 +21,16 @@ class DatabaseManager:
             print(f"Database connection error: {err}")
             sys.exit(1)
 
-    def getUsers(self) -> list[User] | None:
+    def getUsersInfo(self, str) -> list[User] | None:
         query = "SELECT * FROM user"
         self.cursor.execute(query)
         result = self.cursor.fetchall()
 
         if result:
-            users = [User(*row).getNameAndPassword() for row in result]
+            if str == "nameAndPassword":
+                users = [User(*row).getNameAndPassword() for row in result]
+            else:
+                users = [User(*row).getUsername() for row in result]
             return users
         else:
             return None
