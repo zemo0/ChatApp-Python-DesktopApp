@@ -1,11 +1,11 @@
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QMainWindow, QLabel
-from PyQt6 import QtWidgets, uic
+from PyQt6 import uic
+from PyQt6.QtCore import pyqtSignal
 from Data import database
-import sys
 from Windows.registrationWindow import RegistrationWindow
 
 class LoginWindow(QMainWindow):
+    loginSuccess = pyqtSignal()
     def __init__(self):
         super().__init__()
         uic.loadUi("UI/loginScreen.ui", self)
@@ -26,6 +26,7 @@ class LoginWindow(QMainWindow):
         dbUsers = self.dbManager.getUsersInfo("nameAndPassword")
         if (usernameInput, passwordInput) in dbUsers:
             print("Login checks out, go to mainWindow")
+            self.loginSuccess.emit()
         else:
             print("Login failed, write so out on the screen")
             self.errorLabel.setText("Neuspjesna prijava, probajte ponovno")

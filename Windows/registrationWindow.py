@@ -17,7 +17,6 @@ class RegistrationWindow(QMainWindow):
         self.dbManager = database.DatabaseManager()
 
     def onButtonClick(self):
-        #get frontend
         nameInput = self.nameLine.text()
         surnameInput = self.surnameLine.text()
         dateInput = self.dateEdit.date().toString("yyyy-MM-dd")
