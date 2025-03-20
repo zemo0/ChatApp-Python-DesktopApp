@@ -21,13 +21,13 @@ class DatabaseManager:
             print(f"Database connection error: {err}")
             sys.exit(1)
 
-    def getUsersInfo(self, str) -> list[User] | None:
+    def getUsersInfo(self, var) -> list[User] | None:
         query = "SELECT * FROM user"
         self.cursor.execute(query)
         result = self.cursor.fetchall()
 
         if result:
-            if str == "nameAndPassword":
+            if var == "nameAndPassword":
                 users = [User(*row).getNameAndPassword() for row in result]
             else:
                 users = [User(*row).getUsername() for row in result]
@@ -35,7 +35,7 @@ class DatabaseManager:
         else:
             return None
 
-    def get_user_by_id(self, user_id: int) -> User | None:
+    def getUserById(self, user_id: int) -> User | None:
         query = "SELECT ID, username, name, surname, address, email, password FROM user WHERE ID = %s"
         self.cursor.execute(query, (user_id,))
         result = self.cursor.fetchone()
@@ -44,6 +44,13 @@ class DatabaseManager:
             return User(*result).__str__()
         else:
             return None
+
+    def insertNewUser(self, name, surname, dateOfBirth, email, username, password, role):
+        query = """INSERT INTO user (name, surname, dateOfBirth, email, username, password, role)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+        values = (name, surname, dateOfBirth, email, username, password, role)
+        self.cursor.execute(query, values)
+        self.db.commit()
 
     def close(self):
         self.cursor.close()

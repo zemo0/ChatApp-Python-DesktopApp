@@ -56,9 +56,9 @@
    <widget class="QLabel" name="usernameLabel">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>200</y>
-      <width>91</width>
+      <x>120</x>
+      <y>230</y>
+      <width>111</width>
       <height>21</height>
      </rect>
     </property>
@@ -69,8 +69,8 @@
    <widget class="QLabel" name="passwordLabel">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>260</y>
+      <x>150</x>
+      <y>280</y>
       <width>49</width>
       <height>16</height>
      </rect>
@@ -84,7 +84,7 @@
      <rect>
       <x>130</x>
       <y>320</y>
-      <width>91</width>
+      <width>101</width>
       <height>16</height>
      </rect>
     </property>
@@ -125,8 +125,8 @@
    <widget class="QLineEdit" name="usernameLine">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>200</y>
+      <x>310</x>
+      <y>230</y>
       <width>113</width>
       <height>21</height>
      </rect>
@@ -135,8 +135,8 @@
    <widget class="QLineEdit" name="passwordLine">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>260</y>
+      <x>310</x>
+      <y>270</y>
       <width>113</width>
       <height>21</height>
      </rect>
@@ -223,6 +223,29 @@
       <string>Admin</string>
      </property>
     </item>
+   </widget>
+   <widget class="QLabel" name="emailLabel">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>190</y>
+      <width>121</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>E-mail adresa</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="emailLine">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>190</y>
+      <width>113</width>
+      <height>21</height>
+     </rect>
+    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

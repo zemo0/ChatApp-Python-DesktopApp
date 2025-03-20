@@ -20,24 +20,33 @@ class RegistrationWindow(QMainWindow):
         #get frontend
         nameInput = self.nameLine.text()
         surnameInput = self.surnameLine.text()
-        dateInput = self.dateEdit.date().toString("dd-MM-yyyy")
+        dateInput = self.dateEdit.date().toString("yyyy-MM-dd")
+        emailInput = self.emailLine.text()
         usernameInput = self.usernameLine.text()
         passwordInput = self.passwordLine.text()
         confirmPasswordInput = self.confirmPasswordLine.text()
         roleInput = self.comboBox.currentText()
 
         #provjera pass i duplikata usernamea
-        self.doChecks(nameInput, surnameInput, dateInput, usernameInput, passwordInput, confirmPasswordInput, roleInput)
+        if self.doChecks(usernameInput, passwordInput, confirmPasswordInput):
+            self.dbManager.insertNewUser(nameInput, surnameInput, dateInput, emailInput, usernameInput, passwordInput,
+                                         roleInput)
+            print("Registracija korisnika je uspješna!")
+        else:
+            print("Neuspješna registracija")
 
-    def doChecks(self, nameInput, surnameInput, dateInput, usernameInput, passwordInput, confirmPasswordInput, roleInput):
+    def doChecks(self, usernameInput, passwordInput, confirmPasswordInput):
         dbUsernames = self.dbManager.getUsersInfo("username")
         print(dbUsernames)
         if usernameInput in dbUsernames:
             self.infoLabel.setText("to korisničko ime već postoji, probajte neko drugo")
+            return False
         elif not self.isValidPassword(passwordInput, confirmPasswordInput):
             self.infoLabel.setText("lozinka nije dobra, mora imati barem 8 znakova, 1 broj i 1 specijalan znak")
+            return False
         else:
             self.infoLabel.setText("")
+            return True
 
     def isValidPassword(self, password, confirmPassword):
         pattern = r'^(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$'
