@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from PyQt6.QtCore import QModelIndex
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import uic
@@ -17,28 +19,40 @@ class ChatWindow(QMainWindow):
         self.contactsModel = QStandardItemModel()
         self.chatView.setModel(self.chatModel)
         self.contactsView.setModel(self.contactsModel)
-        self.pushButton.clicked.connect(self.add_item)
+        self.contactsView.clicked.connect(self.onContactClicked)
+        self.pushButton.clicked.connect(self.addMessage)
 
-        self.loadMessages()
+        self.loadContacts()
 
 
-    def loadMessages(self):
+    def loadContacts(self):
         print("Try to load the messages on startup")
-        self.messages = self.dbManager.getMessages(self.loginSession.user_id)
-        for message in self.messages:
-            item = QStandardItem(message)
+        self.contacts = self.dbManager.getContacts(self.loginSession.user_id)
+        for contact in self.contacts:
+            item = QStandardItem(contact)
             self.contactsModel.appendRow(item)
-        print(f"The messages are {self.messages}")
+        print(f"The contacts are {self.contacts}")
 
-    def add_item(self):
+    def addMessage(self, messages):
         """Adds a new item to the QListView"""
-        username = "JohnDoe"
-        timestamp = "10:30 AM"
-        message = "This is a sample message."
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.chatModel.clear()
+        for message in messages:
+            userId = message.getSenderId()
+            username = self.dbManager.getUsernameById(userId)
+            timestamp = message.getTimestamp()
+            content = message.getContent()
+            formatted_text = f"{username}   {timestamp}\n{content}\n"
+            item = QStandardItem(formatted_text)
+            self.chatModel.appendRow(item)
 
-        formatted_text = f"{username}   {timestamp}\n{message}"
-        item = QStandardItem(formatted_text)
-        self.chatModel.appendRow(item)
+    def onContactClicked(self, index: QModelIndex):
+        """Handle item click event"""
+        item = self.contactsModel.itemFromIndex(index)
+        print(f"Clicked on: {item.text()}")
+        receiverId = self.dbManager.getIdByUsername(item.text())
+        print(f"Receiver id is {receiverId}, current user is {self.loginSession.user_id}")
+        self.loadChatsBetweenUsers(self.loginSession.user_id, receiverId)
 
-        print(f"Session is {self.loginSession.user_id} and {self.loginSession.username}")
+    def loadChatsBetweenUsers(self, currentUserId, receiverId):
+        messages = self.dbManager.getChatMessages(currentUserId, receiverId)
+        self.addMessage(messages)

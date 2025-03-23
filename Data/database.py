@@ -60,6 +60,16 @@ class DatabaseManager:
         else:
             return None
 
+    def getUsernameById(self, id: int) -> str | None:
+        query = "SELECT username FROM user WHERE id = %s"
+        self.cursor.execute(query, (id,))
+        result = self.cursor.fetchone()
+
+        if result:
+            return result[0]
+        else:
+            return None
+
     def insertNewUser(self, name, surname, dateOfBirth, email, username, password, role):
         query = """INSERT INTO user (name, surname, dateOfBirth, email, username, password, role)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)"""
@@ -67,18 +77,40 @@ class DatabaseManager:
         self.cursor.execute(query, values)
         self.db.commit()
 
-    def getMessages(self, userId):
+    def getContacts(self, userId):
         query = """
-            SELECT ID, content, IDSender, IDReceiver, timestamp
-            FROM message
-            WHERE IDSender = %s OR IDReceiver = %s
+            SELECT DISTINCT u.username
+            FROM message m
+            JOIN user u ON (m.IDSender = u.ID AND m.IDReceiver = %s) 
+               OR (m.IDReceiver = u.ID AND m.IDSender = %s)
+            WHERE u.ID != %s;
         """
-        self.cursor.execute(query, (userId, userId))
+
+        self.cursor.execute(query, (userId, userId, userId))
         result = self.cursor.fetchall()
 
         if result:
-            messages = [Message(*row).getContent() for row in result]
-            print(f"The result is {messages}")
+            usernames = [row[0] for row in result]
+            print(f"Usernames are {usernames}")
+            return usernames
+        else:
+            return None
+
+    def getChatMessages(self, currentUserId, receiverId):
+        query = """
+            SELECT *
+            FROM message
+            WHERE (IDSender = %s AND IDReceiver = %s) 
+                OR (IDSender = %s AND IDReceiver = %s)
+            ORDER BY timestamp ASC;
+        """
+
+        self.cursor.execute(query, (currentUserId, receiverId, receiverId, currentUserId))
+        result = self.cursor.fetchall()
+
+        if result:
+            messages = [Message(*row) for row in result]
+            print(f"messages is {messages}")
             return messages
         else:
             return None
