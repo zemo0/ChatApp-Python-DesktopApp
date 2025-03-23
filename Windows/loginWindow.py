@@ -2,10 +2,12 @@ from PyQt6.QtWidgets import QMainWindow, QLabel
 from PyQt6 import uic
 from PyQt6.QtCore import pyqtSignal
 from Data import database
+from Data.userSession import UserSession
 from Windows.registrationWindow import RegistrationWindow
 
 class LoginWindow(QMainWindow):
     loginSuccess = pyqtSignal()
+    loginSession = UserSession()
     def __init__(self):
         super().__init__()
         uic.loadUi("UI/loginScreen.ui", self)
@@ -26,6 +28,9 @@ class LoginWindow(QMainWindow):
         dbUsers = self.dbManager.getUsersInfo("nameAndPassword")
         if (usernameInput, passwordInput) in dbUsers:
             print("Login checks out, go to mainWindow")
+            self.loginSession.username = usernameInput
+            self.loginSession.user_id = self.dbManager.getIdByUsername(usernameInput)
+            print(f"Session values are {self.loginSession.username} and {self.loginSession.user_id}")
             self.loginSuccess.emit()
         else:
             print("Login failed, write so out on the screen")
