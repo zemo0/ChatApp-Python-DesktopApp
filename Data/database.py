@@ -1,6 +1,7 @@
 import mysql.connector
 import sys
 from Data.user import User
+from Data.message import Message
 sys.stdout.reconfigure(encoding='utf-8')
 
 class DatabaseManager:
@@ -66,7 +67,22 @@ class DatabaseManager:
         self.cursor.execute(query, values)
         self.db.commit()
 
-    
+    def getMessages(self, userId):
+        query = """
+            SELECT ID, content, IDSender, IDReceiver, timestamp
+            FROM message
+            WHERE IDSender = %s OR IDReceiver = %s
+        """
+        self.cursor.execute(query, (userId, userId))
+        result = self.cursor.fetchall()
+
+        if result:
+            messages = [Message(*row).getContent() for row in result]
+            print(f"The result is {messages}")
+            return messages
+        else:
+            return None
+
     def close(self):
         self.cursor.close()
         self.db.close()

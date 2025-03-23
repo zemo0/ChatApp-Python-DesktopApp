@@ -1,11 +1,9 @@
 from datetime import datetime
-from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
-from PyQt6.QtWidgets import QMainWindow, QListView
+from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import uic
 from Data import database
 from Data.userSession import UserSession
-from Windows.registrationWindow import RegistrationWindow
 
 class ChatWindow(QMainWindow):
     loginSession = UserSession()
@@ -14,10 +12,23 @@ class ChatWindow(QMainWindow):
         uic.loadUi("UI/chatScreen.ui", self)
         print("The UI screen is loaded")
 
-        self.model = QStandardItemModel()
-        self.chatView.setModel(self.model)
+        self.dbManager = database.DatabaseManager() #db connector
+        self.chatModel = QStandardItemModel()
+        self.contactsModel = QStandardItemModel()
+        self.chatView.setModel(self.chatModel)
+        self.contactsView.setModel(self.contactsModel)
         self.pushButton.clicked.connect(self.add_item)
 
+        self.loadMessages()
+
+
+    def loadMessages(self):
+        print("Try to load the messages on startup")
+        self.messages = self.dbManager.getMessages(self.loginSession.user_id)
+        for message in self.messages:
+            item = QStandardItem(message)
+            self.contactsModel.appendRow(item)
+        print(f"The messages are {self.messages}")
 
     def add_item(self):
         """Adds a new item to the QListView"""
@@ -28,6 +39,6 @@ class ChatWindow(QMainWindow):
 
         formatted_text = f"{username}   {timestamp}\n{message}"
         item = QStandardItem(formatted_text)
-        self.model.appendRow(item)
+        self.chatModel.appendRow(item)
 
         print(f"Session is {self.loginSession.user_id} and {self.loginSession.username}")

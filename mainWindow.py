@@ -10,7 +10,6 @@ class Main(QMainWindow):
         super().__init__()
         self.loginWindow = LoginWindow()
         self.registrationWindow = RegistrationWindow()
-        self.chatWindow = ChatWindow()
         self.loginWindow.show()
         self.loginWindow.linkLabel.linkActivated.connect(self.showRegistration)
         self.loginWindow.loginSuccess.connect(self.showChatWindow)
@@ -21,6 +20,7 @@ class Main(QMainWindow):
         self.loginWindow.hide()
 
     def showChatWindow(self):
+        self.chatWindow = ChatWindow()
         print("ChatScreen showing")
         self.chatWindow.show()
         self.loginWindow.hide()
