@@ -1,10 +1,11 @@
+from datetime import date
 class User:
-    def __init__(self, user_id: int, username: str, name: str, surname: str, address: str, email: str, password: str, role: str):
+    def __init__(self, user_id: int, name: str, surname: str, dateOfBirth: date, email: str, username: str, password: str, role: str):
         self.__user_id = user_id
         self.__username = username
         self.__name = name
         self.__surname = surname
-        self.__address = address
+        self.__dateOfBirth = dateOfBirth
         self.__email = email
         self.__password = password
         self.__role = role
@@ -21,8 +22,8 @@ class User:
     def setSurname(self, surname: str):
         self.__surname = surname
 
-    def setAddress(self, address: str):
-        self.__address = address
+    def setDateOfBirth(self, dateOfBirth: date):
+        self.__dateOfBirth = dateOfBirth
 
     def setEmail(self, email: str):
         self.__email = email
@@ -46,8 +47,8 @@ class User:
     def getSurname(self) -> str:
         return self.__surname
 
-    def getAddress(self) -> str:
-        return self.__address
+    def getDateOfBirth(self) -> date:
+        return self.__dateOfBirth
 
     def getEmail(self) -> str:
         return self.__email
@@ -59,7 +60,7 @@ class User:
         return self.__role
 
     def getNameAndPassword(self):
-        return self.getName(), self.getPassword()
+        return self.getUsername(), self.getPassword()
 
     def __repr__(self):  # For debugging
         return f"User({self.__user_id}, {self.__username}, {self.__name}, {self.__surname}, {self.__address}, {self.__email}, {self.__password})"

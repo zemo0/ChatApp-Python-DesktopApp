@@ -115,6 +115,15 @@ class DatabaseManager:
         else:
             return None
 
+    def insertNewMessage(self, content, IDSender, IDReceiver, timestamp):
+        query = """
+            INSERT INTO message (content, IDSender, IDReceiver, timestamp)
+            VALUES (%s, %s, %s, %s)
+        """
+        values = (content, IDSender, IDReceiver, timestamp)
+        self.cursor.execute(query, values)
+        self.db.commit()
+
     def close(self):
         self.cursor.close()
         self.db.close()

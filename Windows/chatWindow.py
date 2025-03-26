@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from PyQt6.QtCore import QModelIndex
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtWidgets import QMainWindow
@@ -20,7 +19,8 @@ class ChatWindow(QMainWindow):
         self.chatView.setModel(self.chatModel)
         self.contactsView.setModel(self.contactsModel)
         self.contactsView.clicked.connect(self.onContactClicked)
-        self.pushButton.clicked.connect(self.addMessage)
+        self.pushButton.clicked.connect(self.sendMessage)
+        self.searchContacts.textChanged.connect(self.searchForUsers)
 
         self.loadContacts()
 
@@ -33,7 +33,17 @@ class ChatWindow(QMainWindow):
             self.contactsModel.appendRow(item)
         print(f"The contacts are {self.contacts}")
 
-    def addMessage(self, messages):
+    def onContactClicked(self, index: QModelIndex):
+        """Handle item click event"""
+        selection = self.getSelectedContact()
+        print(f"The currently selected contact is {selection}")
+        self.loadChatsBetweenUsers(self.loginSession.user_id, self.dbManager.getIdByUsername(selection))
+
+    def loadChatsBetweenUsers(self, currentUserId, receiverId):
+        messages = self.dbManager.getChatMessages(currentUserId, receiverId)
+        self.addMessageToChat(messages)
+
+    def addMessageToChat(self, messages):
         """Adds a new item to the QListView"""
         self.chatModel.clear()
         for message in messages:
@@ -45,14 +55,27 @@ class ChatWindow(QMainWindow):
             item = QStandardItem(formatted_text)
             self.chatModel.appendRow(item)
 
-    def onContactClicked(self, index: QModelIndex):
-        """Handle item click event"""
-        item = self.contactsModel.itemFromIndex(index)
-        print(f"Clicked on: {item.text()}")
-        receiverId = self.dbManager.getIdByUsername(item.text())
-        print(f"Receiver id is {receiverId}, current user is {self.loginSession.user_id}")
-        self.loadChatsBetweenUsers(self.loginSession.user_id, receiverId)
+    def sendMessage(self):
+        message = self.messageLine.text()
+        idSender = self.loginSession.user_id
+        receiverUsername = self.getSelectedContact()
+        idReceiver = self.dbManager.getIdByUsername(receiverUsername)
+        timestamp = datetime.now()
+        print(f"The full data sent to the database is {message}, {idSender}, {idReceiver}, {timestamp}")
+        self.dbManager.insertNewMessage(message, idSender, idReceiver, timestamp)
 
-    def loadChatsBetweenUsers(self, currentUserId, receiverId):
-        messages = self.dbManager.getChatMessages(currentUserId, receiverId)
-        self.addMessage(messages)
+    def searchForUsers(self):
+        self.contactsModel.clear()
+        inputUsername = self.searchContacts.text()
+        self.contacts = self.dbManager.getContacts(self.loginSession.user_id)
+        for contact in self.contacts:
+            if inputUsername in contact:
+                item = QStandardItem(contact)
+                self.contactsModel.appendRow(item)
+
+    def getSelectedContact(self):
+        selection = self.contactsView.selectedIndexes()
+        if selection:
+            item = self.contactsModel.itemFromIndex(selection[0])
+            return item.text()
+        return None  # No selection

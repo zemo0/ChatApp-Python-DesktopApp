@@ -26,6 +26,7 @@ class LoginWindow(QMainWindow):
         usernameInput = self.usernameLine.text()
         passwordInput = self.passwordLine.text()
         dbUsers = self.dbManager.getUsersInfo("nameAndPassword")
+        print(f"dbusers are {dbUsers}")
         if (usernameInput, passwordInput) in dbUsers:
             print("Login checks out, go to mainWindow")
             self.loginSession.username = usernameInput
