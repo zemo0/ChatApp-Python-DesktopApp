@@ -147,12 +147,24 @@
     </property>
     <addaction name="actionUredi"/>
    </widget>
+   <widget class="QMenu" name="menuGrupe">
+    <property name="title">
+     <string>Grupe</string>
+    </property>
+    <addaction name="addGroup"/>
+   </widget>
+   <addaction name="menuGrupe"/>
    <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionUredi">
    <property name="text">
     <string>Uredi</string>
+   </property>
+  </action>
+  <action name="addGroup">
+   <property name="text">
+    <string>Dodaj novu</string>
    </property>
   </action>
  </widget>

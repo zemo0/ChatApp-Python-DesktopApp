@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow 
 from PyQt6 import QtWidgets, uic
 import sys
+from Windows.groupWindow import GroupWindow
 from Windows.loginWindow import LoginWindow
 from Windows.registrationWindow import RegistrationWindow
 from Windows.chatWindow import ChatWindow
@@ -10,9 +11,12 @@ class Main(QMainWindow):
         super().__init__()
         self.loginWindow = LoginWindow()
         self.registrationWindow = RegistrationWindow()
+        self.chatWindow = ChatWindow()
+        self.groupWindow = GroupWindow()
         self.loginWindow.show()
         self.loginWindow.linkLabel.linkActivated.connect(self.showRegistration)
         self.loginWindow.loginSuccess.connect(self.showChatWindow)
+        self.chatWindow.newGroupSignal.connect(self.showAddGroupWindow)
 
     def showRegistration(self):
         print("RegistrationScreen link clicked")
@@ -20,10 +24,14 @@ class Main(QMainWindow):
         self.loginWindow.hide()
 
     def showChatWindow(self):
-        self.chatWindow = ChatWindow()
         print("ChatScreen showing")
         self.chatWindow.show()
+        self.chatWindow.loadContacts()
         self.loginWindow.hide()
+
+    def showAddGroupWindow(self):
+        print("Group window is now showing")
+        self.groupWindow.show()
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)

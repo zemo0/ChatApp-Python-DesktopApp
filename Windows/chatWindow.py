@@ -1,5 +1,5 @@
 from datetime import datetime
-from PyQt6.QtCore import QModelIndex
+from PyQt6.QtCore import QModelIndex, pyqtSignal
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import uic
@@ -7,6 +7,7 @@ from Data import database
 from Data.userSession import UserSession
 
 class ChatWindow(QMainWindow):
+    newGroupSignal = pyqtSignal()
     loginSession = UserSession()
     def __init__(self):
         super().__init__()
@@ -21,17 +22,17 @@ class ChatWindow(QMainWindow):
         self.contactsView.clicked.connect(self.onContactClicked)
         self.pushButton.clicked.connect(self.sendMessage)
         self.searchContacts.textChanged.connect(self.searchForUsers)
-
-        self.loadContacts()
+        self.addGroup.triggered.connect(self.addNewGroup)
 
 
     def loadContacts(self):
         print("Try to load the messages on startup")
         self.contacts = self.dbManager.getContacts(self.loginSession.user_id)
-        for contact in self.contacts:
-            item = QStandardItem(contact)
-            self.contactsModel.appendRow(item)
-        print(f"The contacts are {self.contacts}")
+        if self.loginSession.user_id is not None:
+            for contact in self.contacts:
+                item = QStandardItem(contact)
+                self.contactsModel.appendRow(item)
+            print(f"The contacts are {self.contacts}")
 
     def onContactClicked(self, index: QModelIndex):
         """Handle item click event"""
@@ -79,3 +80,6 @@ class ChatWindow(QMainWindow):
             item = self.contactsModel.itemFromIndex(selection[0])
             return item.text()
         return None  # No selection
+
+    def addNewGroup(self):
+        self.newGroupSignal.emit()
