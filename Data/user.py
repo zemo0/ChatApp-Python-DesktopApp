@@ -1,6 +1,6 @@
 from datetime import date
 class User:
-    def __init__(self, user_id: int, name: str, surname: str, dateOfBirth: date, email: str, username: str, password: str, role: str):
+    def __init__(self, user_id: str, name: str, surname: str, dateOfBirth: date, email: str, username: str, password: str, role: str):
         self.__user_id = user_id
         self.__username = username
         self.__name = name
@@ -10,7 +10,7 @@ class User:
         self.__password = password
         self.__role = role
 
-    def setUserId(self, userId: int):
+    def setUserId(self, userId: str):
         self.__userId = userId
 
     def setUsername(self, username: str):
@@ -35,7 +35,7 @@ class User:
         self.__role = role
 
 
-    def getUserId(self) -> int:
+    def getUserId(self) -> str:
         return self.__userId
 
     def getUsername(self) -> str:

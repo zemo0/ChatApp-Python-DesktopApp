@@ -2,6 +2,7 @@ import mysql.connector
 import sys
 from Data.user import User
 from Data.message import Message
+from Data.chat_group import Chat_group
 sys.stdout.reconfigure(encoding='utf-8')
 
 class DatabaseManager:
@@ -39,17 +40,7 @@ class DatabaseManager:
         else:
             return None
 
-    def getUserById(self, user_id: int) -> User | None:
-        query = "SELECT ID, username, name, surname, address, email, password FROM user WHERE ID = %s"
-        self.cursor.execute(query, (user_id,))
-        result = self.cursor.fetchone()
-
-        if result:
-            return User(*result).__str__()
-        else:
-            return None
-
-    def getIdByUsername(self, username: str) -> int | None:
+    def getIdByUsername(self, username: str) -> str | None:
         query = "SELECT ID FROM user WHERE username = %s"
         self.cursor.execute(query, (username,))
         result = self.cursor.fetchone()
@@ -60,7 +51,7 @@ class DatabaseManager:
         else:
             return None
 
-    def getUsernameById(self, id: int) -> str | None:
+    def getUsernameById(self, id: str) -> str | None:
         query = "SELECT username FROM user WHERE id = %s"
         self.cursor.execute(query, (id,))
         result = self.cursor.fetchone()
@@ -70,23 +61,35 @@ class DatabaseManager:
         else:
             return None
 
-    def insertNewUser(self, name, surname, dateOfBirth, email, username, password, role):
-        query = """INSERT INTO user (name, surname, dateOfBirth, email, username, password, role)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-        values = (name, surname, dateOfBirth, email, username, password, role)
+    def insertNewUser(self, ID, name, surname, dateOfBirth, email, username, password, role):
+        query = """INSERT INTO user (ID, name, surname, dateOfBirth, email, username, password, role)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+        values = (ID, name, surname, dateOfBirth, email, username, password, role)
         self.cursor.execute(query, values)
         self.db.commit()
 
     def getContacts(self, userId):
         query = """
             SELECT DISTINCT u.username
-            FROM message m
-            JOIN user u ON (m.IDSender = u.ID AND m.IDReceiver = %s) 
-               OR (m.IDReceiver = u.ID AND m.IDSender = %s)
-            WHERE u.ID != %s;
+            FROM (
+                SELECT m.IDReceiver AS user_id
+                FROM message m
+                JOIN user u ON (m.IDSender = u.ID AND m.IDReceiver = %s) 
+                   OR (m.IDReceiver = u.ID AND m.IDSender = %s)
+                WHERE u.ID != %s
+    
+                UNION
+    
+                SELECT gm.user_id
+                FROM group_members gm
+                JOIN message m ON (gm.group_id = m.group_id)
+                JOIN user u ON gm.user_id = u.ID
+                WHERE gm.user_id != %s
+            ) AS contacts
+            JOIN user u ON contacts.user_id = u.ID;
         """
 
-        self.cursor.execute(query, (userId, userId, userId))
+        self.cursor.execute(query, (userId, userId, userId, userId))
         result = self.cursor.fetchall()
 
         if result:
@@ -115,14 +118,44 @@ class DatabaseManager:
         else:
             return None
 
-    def insertNewMessage(self, content, IDSender, IDReceiver, timestamp):
+    def insertNewChatMessage(self, content, IDSender, GroupID, IDReceiver, timestamp):
+
+    def insertNewGroupMessage(self, ID, content, IDSender, GroupID, timestamp):
         query = """
-            INSERT INTO message (content, IDSender, IDReceiver, timestamp)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO message (ID, content, IDSender, GroupId, IDReceiver, timestamp)
+            VALUES (%s, %s, %s, %s, NULL, %s)
         """
-        values = (content, IDSender, IDReceiver, timestamp)
+        values = (ID, content, IDSender, GroupID, timestamp)
         self.cursor.execute(query, values)
         self.db.commit()
+
+    def insertNewDirectMessage(self, ID, content, IDSender, IDReceiver, timestamp):
+        query = """
+            INSERT INTO message (ID, content, IDSender, GroupId, IDReceiver, timestamp)
+            VALUES (%s, %s, %s, NULL, %s, %s)
+        """
+        values = (ID, content, IDSender, IDReceiver, timestamp)
+        self.cursor.execute(query, values)
+        self.db.commit()
+
+    def getGroupNames(self):
+        query = """
+            SELECT * FROM chat_group
+        """
+        self.cursor.execute(query)
+        result = self.cursor.fetchall()
+
+        if result:
+            groups = [Chat_group(*row).getGroupName() for row in result]
+            return groups
+        else:
+            return None
+
+    def isGroup(self, groupName):
+        groupNamesInDB = self.dbManager.getGroupNames()
+        if groupName in groupNamesInDB:
+            return True
+        return False
 
     def close(self):
         self.cursor.close()

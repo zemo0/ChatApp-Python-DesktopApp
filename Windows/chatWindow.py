@@ -4,6 +4,7 @@ from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import uic
 from Data import database
+from Data.Helpers import cryptoFunctions
 from Data.userSession import UserSession
 
 class ChatWindow(QMainWindow):
@@ -58,12 +59,14 @@ class ChatWindow(QMainWindow):
 
     def sendMessage(self):
         message = self.messageLine.text()
+        ID = cryptoFunctions.prepId(message)
         idSender = self.loginSession.user_id
         receiverUsername = self.getSelectedContact()
         idReceiver = self.dbManager.getIdByUsername(receiverUsername)
         timestamp = datetime.now()
+        self.dbManager.insertNewChatMessage(ID, message, idSender, idReceiver, timestamp)
         print(f"The full data sent to the database is {message}, {idSender}, {idReceiver}, {timestamp}")
-        self.dbManager.insertNewMessage(message, idSender, idReceiver, timestamp)
+
 
     def searchForUsers(self):
         self.contactsModel.clear()

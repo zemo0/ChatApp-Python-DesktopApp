@@ -1,12 +1,13 @@
 from datetime import datetime
 
 class Message:
-    def __init__(self, messageId:int, content:str, senderId:int, receiverId:int, timestamp:datetime):
+    def __init__(self, messageId:str, content:str, senderId:str, groupId:str, receiverId:str, timestamp:datetime):
         self._id = messageId
         self._content = content
         self._senderId = senderId
+        self._groupId = groupId
         self._receiverId = receiverId
-        self._timestamp = timestamp if timestamp else datetime.now()
+        self._timestamp = timestamp
 
     def setId(self, idMessage):
         self._id = idMessage
@@ -16,6 +17,9 @@ class Message:
 
     def setSenderId(self, senderId):
         self._senderId = senderId
+
+    def setGroupId(self, groupId):
+        self._groupId = groupId
 
     def setReceiverId(self, receiverId):
         self._receiverId = receiverId
@@ -32,6 +36,9 @@ class Message:
     def getSenderId(self):
         return self._senderId
 
+    def getGroupId(self):
+        return self._groupId
+
     def getReceiverId(self):
         return self._receiverId
 
@@ -42,6 +49,7 @@ class Message:
         """Display the message in a readable format"""
         print(f"Message ID: {self._id}")
         print(f"Sender ID: {self._senderId}")
+        print(f"Group ID: {self._groupId}")
         print(f"Receiver ID: {self._receiverId}")
         print(f"Timestamp: {self._timestamp}")
         print(f"Content: {self._content}")

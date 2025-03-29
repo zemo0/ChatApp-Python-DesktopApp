@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow, QLabel
 from PyQt6 import QtWidgets, uic
 from Data import database
+from Data.Helpers import cryptoFunctions
 import re
 
 class RegistrationWindow(QMainWindow):
@@ -28,8 +29,9 @@ class RegistrationWindow(QMainWindow):
 
         #provjera pass i duplikata usernamea
         if self.doChecks(usernameInput, passwordInput, confirmPasswordInput):
-            self.dbManager.insertNewUser(nameInput, surnameInput, dateInput, emailInput, usernameInput, passwordInput,
-                                         roleInput)
+            storedId = cryptoFunctions.prepId(usernameInput)
+            self.dbManager.insertNewUser(storedId, nameInput, surnameInput, dateInput, emailInput, usernameInput,
+                                         passwordInput, roleInput)
             print("Registracija korisnika je uspješna!")
         else:
             print("Neuspješna registracija")
