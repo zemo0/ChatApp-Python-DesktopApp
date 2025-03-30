@@ -9,10 +9,10 @@ from Windows.chatWindow import ChatWindow
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.groupWindow = None
         self.loginWindow = LoginWindow()
         self.registrationWindow = RegistrationWindow()
         self.chatWindow = ChatWindow()
-        self.groupWindow = GroupWindow()
         self.loginWindow.show()
         self.loginWindow.linkLabel.linkActivated.connect(self.showRegistration)
         self.loginWindow.loginSuccess.connect(self.showChatWindow)
@@ -25,6 +25,7 @@ class Main(QMainWindow):
 
     def showChatWindow(self):
         print("ChatScreen showing")
+        self.groupWindow = GroupWindow()
         self.chatWindow.show()
         self.chatWindow.loadContacts()
         self.loginWindow.hide()

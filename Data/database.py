@@ -68,34 +68,61 @@ class DatabaseManager:
         self.cursor.execute(query, values)
         self.db.commit()
 
+    def getAllContacts(self, currentUserId):
+        query = """
+            SELECT DISTINCT contact_name,contact_id
+            FROM (
+                -- Get all users except the current user
+                SELECT u.ID AS contact_id, u.username AS contact_name
+                FROM user u
+                WHERE u.ID != %s
+            
+                UNION
+            
+                -- Get all groups
+                SELECT g.ID AS contact_id, g.name AS contact_name
+                FROM chat_group g
+            ) AS contacts;
+        """
+        self.cursor.execute(query, (currentUserId,))
+        result = self.cursor.fetchall()
+
+        if result:
+            contacts = [(row[0], row[1]) for row in result]  # Returns a list of tuples (ID, Name)
+            print(f"All contacts (users & groups): {contacts}")
+            return contacts
+        else:
+            return None
+
+
     def getContacts(self, userId):
         query = """
-            SELECT DISTINCT u.username
+            SELECT DISTINCT contact_name, contact_id 
             FROM (
-                SELECT m.IDReceiver AS user_id
+                -- Get direct user contacts
+                SELECT u.ID AS contact_id, u.username AS contact_name
                 FROM message m
                 JOIN user u ON (m.IDSender = u.ID AND m.IDReceiver = %s) 
                    OR (m.IDReceiver = u.ID AND m.IDSender = %s)
                 WHERE u.ID != %s
-    
+        
                 UNION
-    
-                SELECT gm.user_id
-                FROM group_members gm
-                JOIN message m ON (gm.group_id = m.group_id)
-                JOIN user u ON gm.user_id = u.ID
-                WHERE gm.user_id != %s
-            ) AS contacts
-            JOIN user u ON contacts.user_id = u.ID;
+        
+                -- Get group chats the user is a part of and has messages
+                SELECT g.ID AS contact_id, g.name AS contact_name
+                FROM chat_group_members gm
+                JOIN chat_group g ON gm.IDGroup = g.ID
+                JOIN message m ON m.GroupID = g.ID
+                WHERE gm.IDUser = %s
+            ) AS contacts;
         """
-
         self.cursor.execute(query, (userId, userId, userId, userId))
         result = self.cursor.fetchall()
 
         if result:
-            usernames = [row[0] for row in result]
-            print(f"Usernames are {usernames}")
-            return usernames
+            contacts = [(row[0], row[1]) for row in result]  # Returning a list of tuples (ID, Name)
+            print(f"Contacts: {contacts}")
+            return contacts
         else:
             return None
 
@@ -118,7 +145,11 @@ class DatabaseManager:
         else:
             return None
 
-    def insertNewChatMessage(self, content, IDSender, GroupID, IDReceiver, timestamp):
+    def insertNewChatMessage(self, ID, content, IDSender, whichID, timestamp):
+        if self.isGroup(whichID):
+            self.insertNewGroupMessage(ID, content, IDSender, whichID, timestamp)
+        else:
+            self.insertNewDirectMessage(ID, content, IDSender, whichID, timestamp)
 
     def insertNewGroupMessage(self, ID, content, IDSender, GroupID, timestamp):
         query = """
@@ -135,12 +166,13 @@ class DatabaseManager:
             VALUES (%s, %s, %s, NULL, %s, %s)
         """
         values = (ID, content, IDSender, IDReceiver, timestamp)
+        print(f"the values to be inserted are {values}")
         self.cursor.execute(query, values)
         self.db.commit()
 
-    def getGroupNames(self):
+    def getGroupIds(self):
         query = """
-            SELECT * FROM chat_group
+            SELECT ID FROM chat_group
         """
         self.cursor.execute(query)
         result = self.cursor.fetchall()
@@ -151,9 +183,9 @@ class DatabaseManager:
         else:
             return None
 
-    def isGroup(self, groupName):
-        groupNamesInDB = self.dbManager.getGroupNames()
-        if groupName in groupNamesInDB:
+    def isGroup(self, groupID):
+        groupIDsInDB = self.getGroupIds()
+        if groupIDsInDB is not None and groupID in groupIDsInDB:
             return True
         return False
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from PyQt6.QtCore import QModelIndex, pyqtSignal
+from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import uic
@@ -29,21 +29,25 @@ class ChatWindow(QMainWindow):
     def loadContacts(self):
         print("Try to load the messages on startup")
         self.contacts = self.dbManager.getContacts(self.loginSession.user_id)
-        if self.loginSession.user_id is not None:
+        print(f"current user is {self.loginSession.user_id} and {self.loginSession.username}")
+        if self.contacts is not None:
             for contact in self.contacts:
-                item = QStandardItem(contact)
+                name, contact_id = contact
+                item = QStandardItem(name)
+                item.setData(contact_id, Qt.ItemDataRole.UserRole)
                 self.contactsModel.appendRow(item)
             print(f"The contacts are {self.contacts}")
 
     def onContactClicked(self, index: QModelIndex):
         """Handle item click event"""
-        selection = self.getSelectedContact()
+        selection, selectionId = self.getSelectedContact()
         print(f"The currently selected contact is {selection}")
         self.loadChatsBetweenUsers(self.loginSession.user_id, self.dbManager.getIdByUsername(selection))
 
     def loadChatsBetweenUsers(self, currentUserId, receiverId):
         messages = self.dbManager.getChatMessages(currentUserId, receiverId)
-        self.addMessageToChat(messages)
+        if messages is not None:
+            self.addMessageToChat(messages)
 
     def addMessageToChat(self, messages):
         """Adds a new item to the QListView"""
@@ -61,8 +65,7 @@ class ChatWindow(QMainWindow):
         message = self.messageLine.text()
         ID = cryptoFunctions.prepId(message)
         idSender = self.loginSession.user_id
-        receiverUsername = self.getSelectedContact()
-        idReceiver = self.dbManager.getIdByUsername(receiverUsername)
+        receiverUsername, idReceiver = self.getSelectedContact()
         timestamp = datetime.now()
         self.dbManager.insertNewChatMessage(ID, message, idSender, idReceiver, timestamp)
         print(f"The full data sent to the database is {message}, {idSender}, {idReceiver}, {timestamp}")
@@ -71,17 +74,23 @@ class ChatWindow(QMainWindow):
     def searchForUsers(self):
         self.contactsModel.clear()
         inputUsername = self.searchContacts.text()
-        self.contacts = self.dbManager.getContacts(self.loginSession.user_id)
+        self.contacts = self.dbManager.getAllContacts(self.loginSession.user_id)
         for contact in self.contacts:
-            if inputUsername in contact:
-                item = QStandardItem(contact)
+            username, user_id = contact
+            if inputUsername in username:
+                item = QStandardItem(username)
+                item.setData(user_id, Qt.ItemDataRole.UserRole)
                 self.contactsModel.appendRow(item)
 
     def getSelectedContact(self):
         selection = self.contactsView.selectedIndexes()
+        print(f"Selection is {selection}")
         if selection:
             item = self.contactsModel.itemFromIndex(selection[0])
-            return item.text()
+            print(f"Item is {item}")
+            contact_id = item.data(Qt.ItemDataRole.UserRole)
+            print(f"The contact id is {contact_id}")
+            return item.text(), contact_id
         return None  # No selection
 
     def addNewGroup(self):

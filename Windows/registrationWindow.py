@@ -39,6 +39,9 @@ class RegistrationWindow(QMainWindow):
     def doChecks(self, usernameInput, passwordInput, confirmPasswordInput):
         dbUsernames = self.dbManager.getUsersInfo("username")
         print(dbUsernames)
+        if dbUsernames is None:
+            print("No users in DB, registration goes through")
+            return True
         if usernameInput in dbUsernames:
             self.infoLabel.setText("to korisničko ime već postoji, probajte neko drugo")
             return False

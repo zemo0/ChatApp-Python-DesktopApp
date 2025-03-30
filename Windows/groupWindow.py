@@ -3,8 +3,11 @@ from PyQt6.QtCore import QEvent, Qt
 from PyQt6.QtGui import QStandardItem, QStandardItemModel
 from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QComboBox, QPushButton, QWidget, QLabel, QLineEdit, QSizePolicy
 from Data import database
+from Data.userSession import UserSession
+
 
 class MultiSelectDropdown(QWidget):
+    loginSession = UserSession()
     def __init__(self, parent=None):
         super().__init__(parent)
         self.dbManager = database.DatabaseManager() #db connector
@@ -19,13 +22,16 @@ class MultiSelectDropdown(QWidget):
         self.comboBox.setModel(self.model)
 
         # Add checkable items
-        self.options = self.dbManager.getUsersInfo("usernames")
-        for option in self.options:
-            item = QStandardItem(option)
-            item.setCheckable(True)
-            item.setCheckState(Qt.CheckState.Unchecked)
-            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
-            self.model.appendRow(item)
+        self.options = self.dbManager.getAllContacts(self.loginSession.user_id)
+        if self.options is not None:
+            for username, ids in self.options:
+                item = QStandardItem(username)
+                item.setCheckable(True)
+                item.setCheckState(Qt.CheckState.Unchecked)
+                item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
+                self.model.appendRow(item)
+        else:
+            print("No users in database")
 
         # Apply event filter to catch clicks on checkboxes
         self.comboBox.view().viewport().installEventFilter(self)
