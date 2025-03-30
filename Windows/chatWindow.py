@@ -41,8 +41,17 @@ class ChatWindow(QMainWindow):
     def onContactClicked(self, index: QModelIndex):
         """Handle item click event"""
         selection, selectionId = self.getSelectedContact()
-        print(f"The currently selected contact is {selection}")
-        self.loadChatsBetweenUsers(self.loginSession.user_id, self.dbManager.getIdByUsername(selection))
+        print(f"seleciton is {selection} and id is {selectionId}")
+        if self.dbManager.isGroup(selectionId):
+            self.loadGroupChat(selectionId)
+        else:
+            print(f"The currently selected contact is {selection}")
+            self.loadChatsBetweenUsers(self.loginSession.user_id, selectionId)
+
+    def loadGroupChat(self, groupId):
+        messages = self.dbManager.getGroupMessages(groupId)
+        if messages is not None:
+            self.addMessageToChat(messages)
 
     def loadChatsBetweenUsers(self, currentUserId, receiverId):
         messages = self.dbManager.getChatMessages(currentUserId, receiverId)
@@ -68,6 +77,7 @@ class ChatWindow(QMainWindow):
         receiverUsername, idReceiver = self.getSelectedContact()
         timestamp = datetime.now()
         self.dbManager.insertNewChatMessage(ID, message, idSender, idReceiver, timestamp)
+        self.loadChatsBetweenUsers(self.loginSession.user_id, idReceiver)
         print(f"The full data sent to the database is {message}, {idSender}, {idReceiver}, {timestamp}")
 
 

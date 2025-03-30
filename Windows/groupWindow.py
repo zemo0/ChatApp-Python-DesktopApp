@@ -3,14 +3,14 @@ from PyQt6.QtCore import QEvent, Qt
 from PyQt6.QtGui import QStandardItem, QStandardItemModel
 from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QComboBox, QPushButton, QWidget, QLabel, QLineEdit, QSizePolicy
 from Data import database
+from Data.Helpers import cryptoFunctions
 from Data.userSession import UserSession
 
-
+dbManager = database.DatabaseManager() #db connector
 class MultiSelectDropdown(QWidget):
     loginSession = UserSession()
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.dbManager = database.DatabaseManager() #db connector
         # Create a ComboBox
         self.comboBox = QComboBox(self)
         self.comboBox.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -22,7 +22,7 @@ class MultiSelectDropdown(QWidget):
         self.comboBox.setModel(self.model)
 
         # Add checkable items
-        self.options = self.dbManager.getAllContacts(self.loginSession.user_id)
+        self.options = dbManager.getAllUsers(self.loginSession.user_id)
         if self.options is not None:
             for username, ids in self.options:
                 item = QStandardItem(username)
@@ -92,4 +92,11 @@ class GroupWindow(QWidget):
         self.button.clicked.connect(self.buttonIsClicked)
 
     def buttonIsClicked(self):
-        print(f"all the clicked items are {self.dropdown.getSelectedItems()}")
+        groupname = self.groupName.text()
+        members = self.dropdown.getSelectedItems()
+        groupId = cryptoFunctions.prepId(groupname)
+        dbManager.insertNewGroup(groupId, groupname)
+        for member in members:
+            idUser = dbManager.getIdByUsername(member)
+            idInDb = cryptoFunctions.prepId(groupId)
+            dbManager.insertGroupMember(idInDb, groupId, idUser)
