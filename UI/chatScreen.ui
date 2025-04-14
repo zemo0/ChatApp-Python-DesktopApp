@@ -143,26 +143,26 @@
    </property>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>Settings</string>
+     <string>Postavke</string>
     </property>
-    <addaction name="actionUredi"/>
+    <addaction name="openSettings"/>
    </widget>
    <widget class="QMenu" name="menuGrupe">
     <property name="title">
      <string>Grupe</string>
     </property>
-    <addaction name="addGroup"/>
+    <addaction name="openGroup"/>
    </widget>
    <addaction name="menuGrupe"/>
    <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionUredi">
+  <action name="openSettings">
    <property name="text">
-    <string>Uredi</string>
+    <string>Otvori</string>
    </property>
   </action>
-  <action name="addGroup">
+  <action name="openGroup">
    <property name="text">
     <string>Dodaj novu</string>
    </property>

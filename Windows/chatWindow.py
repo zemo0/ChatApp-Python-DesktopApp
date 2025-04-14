@@ -1,3 +1,4 @@
+import configparser
 from datetime import datetime
 from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
@@ -5,10 +6,12 @@ from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import uic
 from Data import database
 from Data.Helpers import cryptoFunctions
+from Data.Helpers.settings import SettingsWindow
 from Data.userSession import UserSession
 
 class ChatWindow(QMainWindow):
     newGroupSignal = pyqtSignal()
+    openSettingsSignal = pyqtSignal()
     loginSession = UserSession()
     def __init__(self):
         super().__init__()
@@ -23,7 +26,8 @@ class ChatWindow(QMainWindow):
         self.contactsView.clicked.connect(self.onContactClicked)
         self.pushButton.clicked.connect(self.sendMessage)
         self.searchContacts.textChanged.connect(self.searchForUsers)
-        self.addGroup.triggered.connect(self.addNewGroup)
+        self.openGroup.triggered.connect(self.openNewGroup)
+        self.openSettings.triggered.connect(self.openSettingsDialog)
 
 
     def loadContacts(self):
@@ -103,5 +107,8 @@ class ChatWindow(QMainWindow):
             return item.text(), contact_id
         return None  # No selection
 
-    def addNewGroup(self):
+    def openNewGroup(self):
         self.newGroupSignal.emit()
+
+    def openSettingsDialog(self):
+        self.openSettingsSignal.emit()
