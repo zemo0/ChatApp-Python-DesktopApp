@@ -1,4 +1,3 @@
-import configparser
 from datetime import datetime
 from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
@@ -6,7 +5,6 @@ from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import uic
 from Data import database
 from Data.Helpers import cryptoFunctions
-from Data.Helpers.settings import SettingsWindow
 from Data.userSession import UserSession
 
 class ChatWindow(QMainWindow):

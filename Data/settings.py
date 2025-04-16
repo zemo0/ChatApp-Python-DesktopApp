@@ -1,9 +1,34 @@
 import configparser
-
+import winreg
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDialog, QComboBox, QSlider, QSpinBox, QPushButton, QVBoxLayout, QLabel, QHBoxLayout
 
 INI_PATH = 'Data/Helpers/config.ini'
+REG_PATH = r"SOFTWARE\ChatApp"
+REG_NAME = "FontSize"
+
+
+def read_font_size():
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_READ)
+        value, _ = winreg.QueryValueEx(key, REG_NAME)
+        winreg.CloseKey(key)
+        return int(value)  # Convert from string if needed
+    except FileNotFoundError:
+        return 12  # Default font size
+    except Exception as e:
+        print(f"Error reading registry: {e}")
+        return 12
+
+
+def write_font_size(font_size):
+    try:
+        key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, REG_PATH)
+        winreg.SetValueEx(key, REG_NAME, 0, winreg.REG_SZ, str(font_size))
+        winreg.CloseKey(key)
+    except Exception as e:
+        print(f"Error writing registry: {e}")
+
 
 class SettingsWindow(QDialog):
     def __init__(self, parent=None):
@@ -84,7 +109,7 @@ class SettingsWindow(QDialog):
 
         # Load user preferences (theme, font size)
         self.theme = self.config.get('UserPreferences', 'theme', fallback='dark')
-        self.font_size = self.config.getint('UserPreferences', 'font_size', fallback=12)
+        self.font_size = read_font_size()
 
         # Load window position and size
         self.x = self.config.getint('WindowSettings', 'x_position', fallback=100)
@@ -103,14 +128,16 @@ class SettingsWindow(QDialog):
         if self.theme == 'dark':
             self.setStyleSheet("background-color: #2e2e2e; color: white;")
             self.chatWindow.setStyleSheet("background-color: #2e2e2e; color: white;")
+            self.groupWindow.setStyleSheet("background-color: #2e2e2e; color: white;")
         else:
             print("try to set stylesheet")
             self.setStyleSheet("background-color: white; color: black;")
             self.chatWindow.setStyleSheet("background-color: white; color: black;")
+            self.groupWindow.setStyleSheet("background-color: white; color: black;")
 
         # Apply font size
         font = self.font()
-        font.setPointSize(self.font_size)
+        font.setPointSize(int(self.font_size))
         self.setFont(font)
 
     def apply_window_settings(self):
@@ -143,7 +170,7 @@ class SettingsWindow(QDialog):
                 print(f"{key} = {value}")
 
         self.config.set('UserPreferences', 'theme', self.theme)
-        self.config.set('UserPreferences', 'font_size', str(self.font_size))
+        write_font_size(str(self.font_size))
         self.config.set('WindowSettings', 'x_position', str(self.x))
         self.config.set('WindowSettings', 'y_position', str(self.y))
         self.config.set('WindowSettings', 'width', str(self.width))
@@ -152,3 +179,4 @@ class SettingsWindow(QDialog):
         with open(INI_PATH, 'w') as configfile:
             self.config.write(configfile)
         print("settings saved to file")
+

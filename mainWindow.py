@@ -1,10 +1,8 @@
-import configparser
-
-from PyQt6.QtWidgets import QApplication, QMainWindow
-from PyQt6 import QtWidgets, uic
+from PyQt6.QtWidgets import QMainWindow
+from PyQt6 import QtWidgets
 import sys
 
-from Data.Helpers.settings import SettingsWindow
+from Data.settings import SettingsWindow
 from Windows.groupWindow import GroupWindow
 from Windows.loginWindow import LoginWindow
 from Windows.registrationWindow import RegistrationWindow
@@ -35,6 +33,7 @@ class Main(QMainWindow):
         self.settingsWindow = SettingsWindow()
         self.chatWindow.show()
         self.chatWindow.loadContacts()
+        self.settingsWindow.load_settings(self.chatWindow, self.groupWindow)
         self.loginWindow.hide()
 
     def showAddGroupWindow(self):
@@ -43,7 +42,6 @@ class Main(QMainWindow):
 
     def openSettingsDialog(self):
         self.settingsWindow.show()
-        self.settingsWindow.load_settings(self.chatWindow, self.groupWindow)
 
 
 if __name__ == '__main__':
