@@ -42,27 +42,25 @@ class SettingsWindow(QDialog):
         self.y = None
         self.height = None
         self.config = None
-        # Create widgets for settings (theme, font size, position)
         self.theme_combo = QComboBox(self)
         self.theme_combo.addItems(["light", "dark"])
 
         self.font_slider = QSlider(Qt.Orientation.Horizontal, self)
         self.font_slider.setMinimum(8)
         self.font_slider.setMaximum(30)
-        self.font_slider.setValue(12)  # Default font size
+        self.font_slider.setValue(12)
 
         self.x_spinbox = QSpinBox(self)
-        self.x_spinbox.setRange(0, 1920)  # Assume screen width is 1920
+        self.x_spinbox.setRange(0, 1920)
         self.x_spinbox.setValue(100)
 
         self.y_spinbox = QSpinBox(self)
-        self.y_spinbox.setRange(0, 1080)  # Assume screen height is 1080
+        self.y_spinbox.setRange(0, 1080)
         self.y_spinbox.setValue(100)
 
         # Layout setup
         layout = QVBoxLayout()
 
-        # Add settings to layout
         layout.addWidget(QLabel("Theme:"))
         layout.addWidget(self.theme_combo)
 
@@ -75,7 +73,6 @@ class SettingsWindow(QDialog):
         layout.addWidget(QLabel("Y Position:"))
         layout.addWidget(self.y_spinbox)
 
-        # Apply/Cancel Buttons
         button_layout = QHBoxLayout()
         apply_button = QPushButton("Apply", self)
         apply_button.clicked.connect(self.apply_changes)
@@ -89,29 +86,23 @@ class SettingsWindow(QDialog):
         self.setLayout(layout)
 
     def apply_changes(self):
-        """Apply the selected settings and pass them to the parent window."""
         theme = self.theme_combo.currentText()
         font_size = self.font_slider.value()
         x_pos = self.x_spinbox.value()
         y_pos = self.y_spinbox.value()
 
-        # Apply settings to the parent (ChatWindow)
         self.apply_settings(theme, font_size, x_pos, y_pos)
         print(f"The parent object is {self.parent()}")
 
-        # Close the settings window
         self.accept()
 
     def load_settings(self, chatWindow, groupWindow):
-        """Load settings from the INI file or default values."""
         self.config = configparser.ConfigParser()
         self.config.read(INI_PATH)
 
-        # Load user preferences (theme, font size)
         self.theme = self.config.get('UserPreferences', 'theme', fallback='dark')
         self.font_size = read_font_size()
 
-        # Load window position and size
         self.x = self.config.getint('WindowSettings', 'x_position', fallback=100)
         self.y = self.config.getint('WindowSettings', 'y_position', fallback=100)
         self.width = self.config.getint('WindowSettings', 'width', fallback=800)
@@ -119,12 +110,10 @@ class SettingsWindow(QDialog):
 
         self.chatWindow = chatWindow
         self.groupWindow = groupWindow
-        # Apply user preferences and window settings
         self.apply_user_preferences()
         self.apply_window_settings()
 
     def apply_user_preferences(self):
-        """Apply user preferences such as theme and font size."""
         if self.theme == 'dark':
             self.setStyleSheet("background-color: #2e2e2e; color: white;")
             self.chatWindow.setStyleSheet("background-color: #2e2e2e; color: white;")
@@ -135,35 +124,27 @@ class SettingsWindow(QDialog):
             self.chatWindow.setStyleSheet("background-color: white; color: black;")
             self.groupWindow.setStyleSheet("background-color: white; color: black;")
 
-        # Apply font size
         font = self.font()
         font.setPointSize(int(self.font_size))
         self.setFont(font)
 
     def apply_window_settings(self):
-        """Apply the window position and size."""
         self.setGeometry(self.x, self.y, 100, 100)
         self.chatWindow.setGeometry(self.x, self.y, self.width, self.height)
         self.groupWindow.setGeometry(self.x, self.y, 200, 200)
 
     def apply_settings(self, theme, font_size, x, y):
-        """Apply the updated settings."""
-        # Update theme and font size
         self.theme = theme
         self.font_size = font_size
         self.x = x
         self.y = y
 
-        # Apply settings to the window
         self.apply_user_preferences()
         self.apply_window_settings()
 
-        # Save settings to the config file
         self.save_settings()
 
     def save_settings(self):
-        """Save the updated settings to the INI file."""
-        print("try save settings to file")
         for section in self.config.sections():
             print(f"[{section}]")
             for key, value in self.config.items(section):

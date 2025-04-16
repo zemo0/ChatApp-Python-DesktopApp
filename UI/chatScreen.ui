@@ -148,10 +148,19 @@
     <addaction name="openSettings"/>
    </widget>
    <widget class="QMenu" name="menuGrupe">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>116</y>
+      <width>182</width>
+      <height>110</height>
+     </rect>
+    </property>
     <property name="title">
-     <string>Grupe</string>
+     <string>Razgovor</string>
     </property>
     <addaction name="openGroup"/>
+    <addaction name="downloadConversation"/>
    </widget>
    <addaction name="menuGrupe"/>
    <addaction name="menuSettings"/>
@@ -164,7 +173,12 @@
   </action>
   <action name="openGroup">
    <property name="text">
-    <string>Dodaj novu</string>
+    <string>Dodaj novu grupu</string>
+   </property>
+  </action>
+  <action name="downloadConversation">
+   <property name="text">
+    <string>Preuzmi razgovor</string>
    </property>
   </action>
  </widget>

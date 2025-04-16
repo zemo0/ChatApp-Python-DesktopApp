@@ -62,7 +62,7 @@ class User:
     def getNameAndPassword(self):
         return self.getUsername(), self.getPassword()
 
-    def __repr__(self):  # For debugging
+    def __repr__(self):
         return f"User({self.__user_id}, {self.__username}, {self.__name}, {self.__surname}, {self.__address}, {self.__email}, {self.__password})"
 
     def __str__(self):

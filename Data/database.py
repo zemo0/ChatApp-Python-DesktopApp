@@ -3,6 +3,7 @@ import sys
 from Data.user import User
 from Data.message import Message
 from Data.chat_group import Chat_group
+from Data.Helpers import jsonLogger
 sys.stdout.reconfigure(encoding='utf-8')
 
 class DatabaseManager:
@@ -18,6 +19,7 @@ class DatabaseManager:
             print("Try to set the cursor")
             self.cursor = self.db.cursor()
             print("Database connection successful!")
+            jsonLogger.write_log("Connection to database is successful!", "INFO")
 
         except mysql.connector.Error as err:
             print(f"Database connection error: {err}")
@@ -78,7 +80,7 @@ class DatabaseManager:
         result = self.cursor.fetchall()
 
         if result:
-            contacts = [(row[0], row[1]) for row in result]  # Returns a list of tuples (ID, Name)
+            contacts = [(row[0], row[1]) for row in result]  # list of tuples (ID, Name)
             print(f"All contacts (users & groups): {contacts}")
             return contacts
         else:
@@ -104,7 +106,7 @@ class DatabaseManager:
         result = self.cursor.fetchall()
 
         if result:
-            contacts = [(row[0], row[1]) for row in result]  # Returns a list of tuples (ID, Name)
+            contacts = [(row[0], row[1]) for row in result]  # list of tuples (ID, Name)
             print(f"All contacts (users & groups): {contacts}")
             return contacts
         else:
@@ -137,7 +139,7 @@ class DatabaseManager:
         result = self.cursor.fetchall()
 
         if result:
-            contacts = [(row[0], row[1]) for row in result]  # Returning a list of tuples (ID, Name)
+            contacts = [(row[0], row[1]) for row in result]  # list of tuples (ID, Name)
             print(f"Contacts: {contacts}")
             return contacts
         else:

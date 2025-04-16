@@ -5,7 +5,7 @@ from Crypto.PublicKey import RSA
 import base64
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# DO NOT EVER USE THIS FUNCTION AGAIN
+# OVO NE KORISTIT VIŠE, SAMO JEDAN PUT JE POTREBNO
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #def generate_rsa_keys():
 #    key = RSA.generate(2048)
@@ -15,24 +15,22 @@ import base64
 #        public_file.write(key.publickey().export_key())
 
 def encrypt_rsa(plain_text: str):
-    # Load the public key from '/files/public_key.pem'
     with open("files/public_key.pem", "rb") as pub_file:
         public_key = RSA.import_key(pub_file.read())
 
     cipher_rsa = PKCS1_OAEP.new(public_key)
     encrypted = cipher_rsa.encrypt(plain_text.encode())
 
-    return base64.b64encode(encrypted).decode()  # Convert to string for DB storage
+    return base64.b64encode(encrypted).decode()
 
 def decrypt_rsa(encrypted_text: str):
-    # Load the private key from '/files/private_key.pem'
     with open("files/private_key.pem", "rb") as priv_file:
         private_key = RSA.import_key(priv_file.read())
 
     cipher_rsa = PKCS1_OAEP.new(private_key)
     decrypted = cipher_rsa.decrypt(base64.b64decode(encrypted_text))
 
-    return decrypted.decode()  # Convert back to a string
+    return decrypted.decode()
 
 def hashTheId(id:str):
     primary_key = hashlib.sha256(id.encode()).hexdigest()

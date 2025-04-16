@@ -46,7 +46,6 @@ class Message:
         return self._timestamp
 
     def displayMessage(self):
-        """Display the message in a readable format"""
         print(f"Message ID: {self._id}")
         print(f"Sender ID: {self._senderId}")
         print(f"Group ID: {self._groupId}")

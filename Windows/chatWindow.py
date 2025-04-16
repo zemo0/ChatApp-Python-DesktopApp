@@ -6,6 +6,7 @@ from PyQt6 import uic
 from Data import database
 from Data.Helpers import cryptoFunctions
 from Data.userSession import UserSession
+from Data.Helpers import XMLoutput
 
 class ChatWindow(QMainWindow):
     newGroupSignal = pyqtSignal()
@@ -25,6 +26,7 @@ class ChatWindow(QMainWindow):
         self.pushButton.clicked.connect(self.sendMessage)
         self.searchContacts.textChanged.connect(self.searchForUsers)
         self.openGroup.triggered.connect(self.openNewGroup)
+        self.downloadConversation.triggered.connect(self.downloadConversationXML)
         self.openSettings.triggered.connect(self.openSettingsDialog)
 
 
@@ -104,6 +106,30 @@ class ChatWindow(QMainWindow):
             print(f"The contact id is {contact_id}")
             return item.text(), contact_id
         return None  # No selection
+
+    def downloadConversationXML(self):
+        selection, selectionId = self.getSelectedContact()
+        if self.dbManager.isGroup(selectionId):
+            messages = self.dbManager.getGroupMessages(selectionId)
+            self.downloadMessagesInXML(messages)
+            print(f"The messages are {messages}")
+        else:
+            messages = self.dbManager.getChatMessages(self.loginSession.user_id, selectionId)
+            self.downloadMessagesInXML(messages)
+            print(f"The messages are {messages}")
+
+    def downloadMessagesInXML(self, listOfMessages):
+        formattedMessages = []
+        for message in listOfMessages:
+            formattedMessages.append(self.message_to_dict(message))
+        XMLoutput.save_chat_to_xml(formattedMessages)
+
+    def message_to_dict(self, messageObject):
+        return {
+            "sender": self.dbManager.getUsernameById(messageObject.getSenderId()),
+            "timestamp": messageObject.getTimestamp().isoformat(),
+            "content": messageObject.getContent()
+        }
 
     def openNewGroup(self):
         self.newGroupSignal.emit()
