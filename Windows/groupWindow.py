@@ -21,7 +21,7 @@ class MultiSelectDropdown(QWidget):
         self.comboBox.setModel(self.model)
 
         # Add checkable items
-        self.options = dbManager.getAllUsers(self.loginSession.user_id)
+        self.options = dbManager.getAllUsers(self.loginSession.getCurrentId())
         if self.options is not None:
             for username, ids in self.options:
                 item = QStandardItem(username)

@@ -29,9 +29,7 @@ class LoginWindow(QMainWindow):
         print(f"dbusers are {dbUsers}")
         if (usernameInput, passwordInput) in dbUsers:
             print("Login checks out, go to mainWindow")
-            self.loginSession.username = usernameInput
-            self.loginSession.user_id = self.dbManager.getIdByUsername(usernameInput)
-            print(f"Session values are {self.loginSession.username} and {self.loginSession.user_id}")
+            self.loginSession.login(usernameInput, self.dbManager.getIdByUsername(usernameInput))
             self.loginSuccess.emit()
         else:
             print("Login failed, write so out on the screen")

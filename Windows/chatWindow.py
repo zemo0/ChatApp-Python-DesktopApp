@@ -32,8 +32,7 @@ class ChatWindow(QMainWindow):
 
     def loadContacts(self):
         print("Try to load the messages on startup")
-        self.contacts = self.dbManager.getContacts(self.loginSession.user_id)
-        print(f"current user is {self.loginSession.user_id} and {self.loginSession.username}")
+        self.contacts = self.dbManager.getContacts(self.loginSession.getCurrentId())
         if self.contacts is not None:
             for contact in self.contacts:
                 name, contact_id = contact
@@ -50,7 +49,7 @@ class ChatWindow(QMainWindow):
             self.loadGroupChat(selectionId)
         else:
             print(f"The currently selected contact is {selection}")
-            self.loadChatsBetweenUsers(self.loginSession.user_id, selectionId)
+            self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), selectionId)
 
     def loadGroupChat(self, groupId):
         messages = self.dbManager.getGroupMessages(groupId)
@@ -77,18 +76,18 @@ class ChatWindow(QMainWindow):
     def sendMessage(self):
         message = self.messageLine.text()
         ID = cryptoFunctions.prepId(message)
-        idSender = self.loginSession.user_id
+        idSender = self.loginSession.getCurrentId()
         receiverUsername, idReceiver = self.getSelectedContact()
         timestamp = datetime.now()
         self.dbManager.insertNewChatMessage(ID, message, idSender, idReceiver, timestamp)
-        self.loadChatsBetweenUsers(self.loginSession.user_id, idReceiver)
+        self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), idReceiver)
         print(f"The full data sent to the database is {message}, {idSender}, {idReceiver}, {timestamp}")
 
 
     def searchForUsers(self):
         self.contactsModel.clear()
         inputUsername = self.searchContacts.text()
-        self.contacts = self.dbManager.getAllContacts(self.loginSession.user_id)
+        self.contacts = self.dbManager.getAllContacts(self.loginSession.getCurrentId())
         for contact in self.contacts:
             username, user_id = contact
             if inputUsername in username:
@@ -114,7 +113,7 @@ class ChatWindow(QMainWindow):
             self.downloadMessagesInXML(messages)
             print(f"The messages are {messages}")
         else:
-            messages = self.dbManager.getChatMessages(self.loginSession.user_id, selectionId)
+            messages = self.dbManager.getChatMessages(self.loginSession.getCurrentId(), selectionId)
             self.downloadMessagesInXML(messages)
             print(f"The messages are {messages}")
 
