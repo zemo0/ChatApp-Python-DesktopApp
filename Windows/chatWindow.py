@@ -17,7 +17,7 @@ class ChatWindow(QMainWindow):
         uic.loadUi("UI/chatScreen.ui", self)
         print("The UI screen is loaded")
 
-        self.dbManager = database.DatabaseManager() #db connector
+        self.dbManager = database.DatabaseManager.instance() #db connector
         self.chatModel = QStandardItemModel()
         self.contactsModel = QStandardItemModel()
         self.chatView.setModel(self.chatModel)

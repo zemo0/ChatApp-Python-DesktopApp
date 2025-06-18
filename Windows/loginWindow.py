@@ -20,17 +20,22 @@ class LoginWindow(QMainWindow):
         self.linkLabel.setOpenExternalLinks(False)
         self.errorLabel = self.findChild(QLabel, "errorLabel")
         self.pushButton.clicked.connect(self.onButtonClick) #provjera logina
-        self.dbManager = database.DatabaseManager() #db connector
+        self.dbManager = database.DatabaseManager.instance() #db connector
 
     def onButtonClick(self):
         usernameInput = self.usernameLine.text()
         passwordInput = self.passwordLine.text()
-        dbUsers = self.dbManager.getUsersInfo("nameAndPassword")
-        print(f"dbusers are {dbUsers}")
+        self.dbManager.getUsersInfo("nameAndPassword", callback=lambda users: self.handleLogin(users, usernameInput, passwordInput))
+
+    def handleLogin(self, dbUsers, usernameInput, passwordInput):
+        print(f"korisnici su {dbUsers}")
         if (usernameInput, passwordInput) in dbUsers:
-            print("Login checks out, go to mainWindow")
-            self.loginSession.login(usernameInput, self.dbManager.getIdByUsername(usernameInput))
-            self.loginSuccess.emit()
+            print("Dobar login, ide u chat")
+            self.dbManager.getIdByUsername(usernameInput, callback=lambda userId: self.finishLogin(usernameInput, userId))
         else:
-            print("Login failed, write so out on the screen")
-            self.errorLabel.setText("Neuspjesna prijava, probajte ponovno")
+            print("Loš login")
+            self.errorLabel.setText("Neuspješna prijava, probajte ponovno")
+
+    def finishLogin(self, username, userId):
+        self.loginSession.login(username, userId)
+        self.loginSuccess.emit()

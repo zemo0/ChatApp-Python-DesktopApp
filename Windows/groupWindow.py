@@ -6,7 +6,7 @@ from Data import database
 from Data.Helpers import cryptoFunctions
 from Data.userSession import UserSession
 
-dbManager = database.DatabaseManager() #db connector
+dbManager = database.DatabaseManager.instance() #zasto je db connector van group windowa? nije li ovo
 class MultiSelectDropdown(QWidget):
     loginSession = UserSession()
     def __init__(self, parent=None):
@@ -21,9 +21,15 @@ class MultiSelectDropdown(QWidget):
         self.comboBox.setModel(self.model)
 
         # Add checkable items
-        self.options = dbManager.getAllUsers(self.loginSession.getCurrentId())
-        if self.options is not None:
-            for username, ids in self.options:
+        dbManager.getAllUsers(self.loginSession.getCurrentId(), callback=self.populateUserList)
+
+
+        # event filter to catch clicks on checkboxes
+        self.comboBox.view().viewport().installEventFilter(self)
+
+    def populateUserList(self, users):
+        if users is not None:
+            for username, ids in users:
                 item = QStandardItem(username)
                 item.setCheckable(True)
                 item.setCheckState(Qt.CheckState.Unchecked)
@@ -32,8 +38,6 @@ class MultiSelectDropdown(QWidget):
         else:
             print("No users in database")
 
-        # event filter to catch clicks on checkboxes
-        self.comboBox.view().viewport().installEventFilter(self)
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.MouseButtonRelease:

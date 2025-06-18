@@ -498,5 +498,175 @@
         "timestamp": "2025-04-18T18:02:16.319705",
         "level": "INFO",
         "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:06:30.500331",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:06:30.803648",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:06:30.827473",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:06:30.854985",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:06:30.985026",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:26:24.543842",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:26:24.642786",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:26:24.661560",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:26:24.689825",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:26:24.781119",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:30:35.377480",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:30:35.469488",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:30:35.493006",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:30:35.518271",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:30:35.601008",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:32:05.952258",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:32:06.030818",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:32:06.046681",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:32:06.062366",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:32:06.156311",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:36:40.073546",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:36:40.187976",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:36:40.204481",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:36:40.234950",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:36:40.337316",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:49:22.052077",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:49:22.261098",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:49:22.288944",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:49:22.306443",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T15:49:22.449929",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T17:27:19.453125",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T17:39:19.300327",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T17:48:53.412966",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
+    },
+    {
+        "timestamp": "2025-06-18T17:52:09.717223",
+        "level": "INFO",
+        "message": "Connection to database is successful!"
     }
 ]

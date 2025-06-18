@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import QtWidgets
 import sys
 
-from Data.settings import SettingsWindow
+from Windows.settingsWindow import SettingsWindow
 from Windows.groupWindow import GroupWindow
 from Windows.loginWindow import LoginWindow
 from Windows.registrationWindow import RegistrationWindow

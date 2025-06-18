@@ -15,7 +15,7 @@ class RegistrationWindow(QMainWindow):
         self.infoLabel.setText("")
         self.infoLabel.setStyleSheet("color: red;")
         self.pushButton.clicked.connect(self.onButtonClick) #registracija
-        self.dbManager = database.DatabaseManager()
+        self.dbManager = database.DatabaseManager.instance()
 
     def onButtonClick(self):
         nameInput = self.nameLine.text()
