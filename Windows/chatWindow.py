@@ -1,5 +1,5 @@
 from datetime import datetime
-from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt
+from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt, QTimer, QMetaObject, Q_ARG, pyqtSlot
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import uic
@@ -61,6 +61,7 @@ class ChatWindow(QMainWindow):
                 self.addMessageToChat(messages)
         self.dbManager.getGroupMessages(groupId, callback=onMessagesFetched)
 
+    @pyqtSlot(str, str)
     def loadChatsBetweenUsers(self, currentUserId, receiverId):
         self.dbManager.instance().getChatMessages(currentUserId, receiverId, callback=self.addMessageToChat)
 
@@ -85,8 +86,13 @@ class ChatWindow(QMainWindow):
         timestamp = datetime.now()
         print("insertat message")
         def onMessageInserted(_):
-            self.loadChatsBetweenUsers(idSender, idReceiver)
-            print(f"The full data sent to the database is {message}, {idSender}, {idReceiver}, {timestamp}")
+            QMetaObject.invokeMethod(
+                self,
+                "loadChatsBetweenUsers",
+                Qt.ConnectionType.QueuedConnection,
+                Q_ARG(str, idSender),
+                Q_ARG(str, idReceiver)
+            )
 
         self.dbManager.insertNewChatMessage(ID, message, idSender, idReceiver, timestamp, callback=onMessageInserted)
 
