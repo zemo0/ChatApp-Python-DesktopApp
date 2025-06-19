@@ -55,6 +55,7 @@ class ChatWindow(QMainWindow):
             print(f"The currently selected contact is {selection}")
             self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), selectionId)
 
+    @pyqtSlot(str)
     def loadGroupChat(self, groupId):
         def onMessagesFetched(messages):
             if messages is not None:
@@ -69,6 +70,7 @@ class ChatWindow(QMainWindow):
         if messages is not None:
             self.chatModel.clear()
             for message in messages:
+                print(f"All messages to add are {messages}")
                 userId = message.getSenderId()
                 timestamp = message.getTimestamp()
                 content = message.getContent()
@@ -86,13 +88,21 @@ class ChatWindow(QMainWindow):
         timestamp = datetime.now()
         print("insertat message")
         def onMessageInserted(_):
-            QMetaObject.invokeMethod(
-                self,
-                "loadChatsBetweenUsers",
-                Qt.ConnectionType.QueuedConnection,
-                Q_ARG(str, idSender),
-                Q_ARG(str, idReceiver)
-            )
+            if self.dbManager.isGroup(idReceiver):
+                QMetaObject.invokeMethod(
+                    self,
+                    "loadGroupChat",
+                    Qt.ConnectionType.QueuedConnection,
+                    Q_ARG(str, idReceiver)
+                )
+            else:
+                QMetaObject.invokeMethod(
+                    self,
+                    "loadChatsBetweenUsers",
+                    Qt.ConnectionType.QueuedConnection,
+                    Q_ARG(str, idSender),
+                    Q_ARG(str, idReceiver)
+                )
 
         self.dbManager.insertNewChatMessage(ID, message, idSender, idReceiver, timestamp, callback=onMessageInserted)
 
