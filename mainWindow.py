@@ -35,6 +35,7 @@ class Main(QMainWindow):
         self.chatWindow.loadContacts()
         self.settingsWindow.load_settings(self.chatWindow, self.groupWindow)
         self.loginWindow.hide()
+        self.chatWindow.startServerPushListener()
 
     def showAddGroupWindow(self):
         print("Group window is now showing")

@@ -1,3 +1,5 @@
+import socket
+import threading
 from datetime import datetime
 from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt, QTimer, QMetaObject, Q_ARG, pyqtSlot
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
@@ -16,7 +18,7 @@ class ChatWindow(QMainWindow):
         super().__init__()
         uic.loadUi("UI/chatScreen.ui", self)
         print("The UI screen is loaded")
-
+        self.onlineUsers = set()
         self.dbManager = database.DatabaseManager.instance() #db connector
         self.chatModel = QStandardItemModel()
         self.contactsModel = QStandardItemModel()
@@ -29,17 +31,82 @@ class ChatWindow(QMainWindow):
         self.downloadConversation.triggered.connect(self.downloadConversationXML)
         self.openSettings.triggered.connect(self.openSettingsDialog)
 
+    def startServerPushListener(self):
+        def listen():
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect(('localhost', 9010))
+                self.serverPushSocket = s
+                user_id = self.loginSession.getCurrentId()
+                s.sendall(f"ONLINE:{user_id}".encode())
+                self.fetchOnlineUsers()
+                QMetaObject.invokeMethod(
+                    self,
+                    "loadContacts",
+                    Qt.ConnectionType.QueuedConnection
+                )
+                while True:
+                    data = s.recv(1024).decode()
+                    if data.startswith("ONLINE:"):
+                        print(f"[PUSH] Novi korisnik online: {data.split(':', 1)[1]}")
 
+                        self.fetchOnlineUsers()
+                        QMetaObject.invokeMethod(
+                            self,
+                            "loadContacts",
+                            Qt.ConnectionType.QueuedConnection
+                        )
+                    if data.startswith("OFFLINE:"):
+                        offline_id = data.split(":", 1)[1]
+                        print(f"[PUSH] Korisnik {offline_id} je offline")
+
+                        self.onlineUsers.discard(offline_id)
+
+                        QMetaObject.invokeMethod(
+                            self,
+                            "loadContacts",
+                            Qt.ConnectionType.QueuedConnection
+                        )
+
+            except Exception as e:
+                print(f"[ERROR] Server push konekcija neuspješna: {e}")
+
+        self.onlineUsers = set()
+        thread = threading.Thread(target=listen, daemon=True)
+        thread.start()
+
+    def fetchOnlineUsers(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('localhost', 9010))
+            s.sendall("LIST_ONLINE".encode())
+            data = s.recv(4096).decode()
+            s.close()
+            if data:
+                self.onlineUsers = set(data.split(","))
+            else:
+                self.onlineUsers = set()
+            print(f"[INFO] Trenutno online: {self.onlineUsers}")
+        except Exception as e:
+            print(f"[ERROR] Dohvaćanje online korisnika neuspjelo: {e}")
+            self.onlineUsers = set()
+
+    @pyqtSlot()
     def loadContacts(self):
         print("Try to load the messages on startup")
         currentUserId = self.loginSession.getCurrentId()
+        print(f"[DEBUG] Current user ID: {currentUserId}")
         self.dbManager.getContacts(currentUserId, callback=self.fillContactView)
 
     def fillContactView(self, contacts):
+        self.contactsModel.clear()
         if contacts is not None:
             self.contacts = contacts
             for name, contact_id in contacts:
-                item = QStandardItem(name)
+                print(f"Svi online kontakti su {self.onlineUsers}")
+                is_online = contact_id in self.onlineUsers
+                display_name = f"{name} {'🟢' if is_online else '🔴'}"
+                item = QStandardItem(display_name)
                 item.setData(contact_id, Qt.ItemDataRole.UserRole)
                 self.contactsModel.appendRow(item)
             print(f"Kontakti su {contacts}")
