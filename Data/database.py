@@ -46,7 +46,7 @@ class DatabaseManager(QObject):
             print("Creating database connection pool...")
             self.pool = mysql.connector.pooling.MySQLConnectionPool(
                 pool_name="mypool",
-                pool_size=4,
+                pool_size=2,
                 pool_reset_session=True,
                 host="localhost",
                 user="root",
@@ -61,7 +61,7 @@ class DatabaseManager(QObject):
 
         self.mutex = QMutex()
         self.threadPool = QThreadPool()
-        self.threadPool.setMaxThreadCount(4)
+        self.threadPool.setMaxThreadCount(2)
         DatabaseManager._instance = self
 
     @staticmethod

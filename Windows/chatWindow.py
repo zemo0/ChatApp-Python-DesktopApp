@@ -1,3 +1,4 @@
+import json
 import socket
 import threading
 from datetime import datetime
@@ -16,9 +17,11 @@ class ChatWindow(QMainWindow):
     loginSession = UserSession()
     def __init__(self):
         super().__init__()
+        self.tcp_socket = None
         uic.loadUi("UI/chatScreen.ui", self)
         print("The UI screen is loaded")
-        self.onlineUsers = set()
+        self.udp_port = 9030
+        self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.dbManager = database.DatabaseManager.instance() #db connector
         self.chatModel = QStandardItemModel()
         self.contactsModel = QStandardItemModel()
@@ -31,65 +34,101 @@ class ChatWindow(QMainWindow):
         self.downloadConversation.triggered.connect(self.downloadConversationXML)
         self.openSettings.triggered.connect(self.openSettingsDialog)
 
-    def startServerPushListener(self):
-        def listen():
+    ####################################
+    ### TCP za poruke, UDP za status ###
+    ####################################
+    def connectToTCPServer(self):
+        self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.tcp_socket.connect(("127.0.0.1", 9010))
+        self.tcp_socket.sendall(json.dumps({
+            'type': 'register',
+            'user_id': self.loginSession.getCurrentId()
+        }).encode('utf-8'))
+
+        threading.Thread(target=self.startTCPListener, daemon=True).start()
+
+    def startTCPListener(self):
+        print("Doso do start tcp")
+        while True:
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect(('localhost', 9010))
-                self.serverPushSocket = s
-                user_id = self.loginSession.getCurrentId()
-                s.sendall(f"ONLINE:{user_id}".encode())
-                self.fetchOnlineUsers()
-                QMetaObject.invokeMethod(
-                    self,
-                    "loadContacts",
-                    Qt.ConnectionType.QueuedConnection
-                )
-                while True:
-                    data = s.recv(1024).decode()
-                    if data.startswith("ONLINE:"):
-                        print(f"[PUSH] Novi korisnik online: {data.split(':', 1)[1]}")
-
-                        self.fetchOnlineUsers()
-                        QMetaObject.invokeMethod(
-                            self,
-                            "loadContacts",
-                            Qt.ConnectionType.QueuedConnection
-                        )
-                    if data.startswith("OFFLINE:"):
-                        offline_id = data.split(":", 1)[1]
-                        print(f"[PUSH] Korisnik {offline_id} je offline")
-
-                        self.onlineUsers.discard(offline_id)
-
-                        QMetaObject.invokeMethod(
-                            self,
-                            "loadContacts",
-                            Qt.ConnectionType.QueuedConnection
-                        )
-
+                data = self.tcp_socket.recv(4096).decode('utf-8')
+                if data:
+                    msg = json.loads(data)
+                    if msg['type'] == 'new_message':
+                        print("Stigla nova poruka, dobio signal na chatWindow")
+                        sender_id = msg['from']
+                        my_id = self.loginSession.getCurrentId()
+                        _, selected_contact = self.getSelectedContact()
+                        print(f"pošiljatelj je {sender_id}, currentid je {my_id} i odabrani kontakt je {selected_contact}")
+                        if selected_contact == sender_id:
+                            print(f"Selected contact je jednak onome koji šalje poruku, refreshaj")
+                            QMetaObject.invokeMethod(
+                                self,
+                                "loadChatsBetweenUsers",
+                                Qt.ConnectionType.QueuedConnection,
+                                Q_ARG(str, my_id),
+                                Q_ARG(str, sender_id)
+                            )
             except Exception as e:
-                print(f"[ERROR] Server push konekcija neuspješna: {e}")
+                print(f"[TCP] Error je {e}")
+                break
 
-        self.onlineUsers = set()
-        thread = threading.Thread(target=listen, daemon=True)
-        thread.start()
+    def startUdpListener(self):
+        def listen():
+            listen_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            listen_socket.bind(("0.0.0.0", 0))
+            self.udp_socket = listen_socket
+            print(f"[UDP] Klijent osluškuje na portu {listen_socket.getsockname()[1]}")
+            self.notifyServerOnlineUDP()
+            self.fetchOnlineUsersUDP()
+            QMetaObject.invokeMethod(
+                self,
+                "loadContacts",
+                Qt.ConnectionType.QueuedConnection
+            )
+            while True:
+                try:
+                    data, _ = listen_socket.recvfrom(1024)
+                    msg = data.decode()
+                    if msg.startswith("ONLINE:"):
+                        user_id = msg.split(":", 1)[1]
+                        print(f"[INFO] {user_id} je online")
+                        self.onlineUsers.add(user_id)
 
-    def fetchOnlineUsers(self):
+                    elif msg.startswith("OFFLINE:"):
+                        user_id = msg.split(":", 1)[1]
+                        print(f"[INFO] {user_id} je offline")
+                        self.onlineUsers.discard(user_id)
+
+                    QMetaObject.invokeMethod(
+                        self,
+                        "loadContacts",
+                        Qt.ConnectionType.QueuedConnection
+                    )
+                except Exception as e:
+                    continue ##ovo fixat, nije u redu tako ostavut
+        threading.Thread(target=listen, daemon=True).start()
+
+    def notifyServerOnlineUDP(self):
+        user_id = self.loginSession.getCurrentId()
+        message = f"ONLINE:{user_id}".encode()
+        self.udp_socket.sendto(message, ("localhost", self.udp_port))
+
+    def notifyServerOfflineUDP(self):
+        user_id = self.loginSession.getCurrentId()
+        message = f"OFFLINE:{user_id}".encode()
+        self.udp_socket.sendto(message, ("localhost", self.udp_port))
+
+    def fetchOnlineUsersUDP(self):
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('localhost', 9010))
-            s.sendall("LIST_ONLINE".encode())
-            data = s.recv(4096).decode()
-            s.close()
-            if data:
-                self.onlineUsers = set(data.split(","))
-            else:
-                self.onlineUsers = set()
-            print(f"[INFO] Trenutno online: {self.onlineUsers}")
+            self.udp_socket.sendto("LIST_ONLINE".encode(), ("localhost", self.udp_port))
+            self.udp_socket.settimeout(2.0)
+            data, _ = self.udp_socket.recvfrom(4096)
+            user_list = data.decode().split(",") if data else []
+            self.onlineUsers = set(user_list)
+            print(f"[UDP] Online korisnici: {self.onlineUsers}")
         except Exception as e:
-            print(f"[ERROR] Dohvaćanje online korisnika neuspjelo: {e}")
-            self.onlineUsers = set()
+            print(f"[UDP] Greška kod dohvaćanja online korisnika: {e}")
 
     @pyqtSlot()
     def loadContacts(self):
@@ -131,6 +170,7 @@ class ChatWindow(QMainWindow):
 
     @pyqtSlot(str, str)
     def loadChatsBetweenUsers(self, currentUserId, receiverId):
+        print("Try to load the chats between users")
         self.dbManager.instance().getChatMessages(currentUserId, receiverId, callback=self.addMessageToChat)
 
     def addMessageToChat(self, messages):
@@ -153,25 +193,21 @@ class ChatWindow(QMainWindow):
         idSender = self.loginSession.getCurrentId()
         receiverUsername, idReceiver = self.getSelectedContact()
         timestamp = datetime.now()
-        print("insertat message")
-        def onMessageInserted(_):
-            if self.dbManager.isGroup(idReceiver):
-                QMetaObject.invokeMethod(
-                    self,
-                    "loadGroupChat",
-                    Qt.ConnectionType.QueuedConnection,
-                    Q_ARG(str, idReceiver)
-                )
-            else:
-                QMetaObject.invokeMethod(
-                    self,
-                    "loadChatsBetweenUsers",
-                    Qt.ConnectionType.QueuedConnection,
-                    Q_ARG(str, idSender),
-                    Q_ARG(str, idReceiver)
-                )
+        payload = {
+            'type': 'chat_message',
+            'message_id': ID,
+            'from': idSender,
+            'to': idReceiver,
+            'content': message,
+            'timestamp': timestamp.isoformat() #crasha ako nije ISO standard
+        }
 
-        self.dbManager.insertNewChatMessage(ID, message, idSender, idReceiver, timestamp, callback=onMessageInserted)
+        try:
+            self.tcp_socket.sendall(json.dumps(payload).encode('utf-8'))
+            self.messageLine.clear()
+            QTimer.singleShot(1000, lambda: self.loadChatsBetweenUsers(idSender, idReceiver)) #nakon 1s osvježi chat
+        except Exception as e:
+            print(f"[SEND ERROR] {e}")
 
     def searchForUsers(self):
         self.contactsModel.clear()
@@ -246,3 +282,7 @@ class ChatWindow(QMainWindow):
 
     def openSettingsDialog(self):
         self.openSettingsSignal.emit()
+
+    def closeEvent(self, event):
+        self.notifyServerOfflineUDP()
+        super().closeEvent(event)
