@@ -29,4 +29,5 @@ def save_chat_to_xml(messages):
         content_el = ET.SubElement(message_el, "content")
         content_el.text = msg["content"]
 
+    print("Probaj writeat u xml")
     tree.write(filename, encoding="utf-8", xml_declaration=True)

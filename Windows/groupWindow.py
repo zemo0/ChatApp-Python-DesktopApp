@@ -21,7 +21,7 @@ class MultiSelectDropdown(QWidget):
         self.comboBox.setModel(self.model)
 
         # Add checkable items
-        dbManager.getAllUsers(self.loginSession.getCurrentId(), callback=self.populateUserList)
+        dbManager.instance().getAllUsers(self.loginSession.getCurrentId(), callback=self.populateUserList)
 
 
         # event filter to catch clicks on checkboxes
@@ -89,8 +89,23 @@ class GroupWindow(QWidget):
         groupname = self.groupName.text()
         members = self.dropdown.getSelectedItems()
         groupId = cryptoFunctions.prepId(groupname)
-        dbManager.insertNewGroup(groupId, groupname)
-        for member in members:
-            idUser = dbManager.getIdByUsername(member)
+        print(f"[DEBUG] Insert group called with ID: {groupId}")
+        def onGroupCreated(_):
+            self.insertNextMember(members, groupId, 0)
+        print("Pozvana insert new grupu")
+        dbManager.instance().insertNewGroup(groupId, groupname, callback=onGroupCreated)
+
+    def insertNextMember(self, members, groupId, index):
+        if index >= len(members):
+            print("Svi članovi grupe su dodani.")
+            return
+
+        member = members[index]
+
+        def onUserIdReceived(userId):
             idInDb = cryptoFunctions.prepId(groupId)
-            dbManager.insertGroupMember(idInDb, groupId, idUser)
+            def onMemberInserted(_):
+                self.insertNextMember(members, groupId, index + 1)
+            dbManager.instance().insertGroupMember(idInDb, groupId, userId, callback=onMemberInserted)
+
+        dbManager.instance().getIdByUsername(member, callback=onUserIdReceived)

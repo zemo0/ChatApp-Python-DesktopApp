@@ -32,17 +32,21 @@ class ChatWindow(QMainWindow):
 
     def loadContacts(self):
         print("Try to load the messages on startup")
-        self.contacts = self.dbManager.getContacts(self.loginSession.getCurrentId())
-        if self.contacts is not None:
-            for contact in self.contacts:
-                name, contact_id = contact
+        currentUserId = self.loginSession.getCurrentId()
+        self.dbManager.getContacts(currentUserId, callback=self.fillContactView)
+
+    def fillContactView(self, contacts):
+        if contacts is not None:
+            self.contacts = contacts
+            for name, contact_id in contacts:
                 item = QStandardItem(name)
                 item.setData(contact_id, Qt.ItemDataRole.UserRole)
                 self.contactsModel.appendRow(item)
-            print(f"The contacts are {self.contacts}")
+            print(f"Kontakti su {contacts}")
+        else:
+            print("Nijedan kontakt nije nađen.")
 
     def onContactClicked(self, index: QModelIndex):
-        """Handle item click event"""
         selection, selectionId = self.getSelectedContact()
         print(f"seleciton is {selection} and id is {selectionId}")
         if self.dbManager.isGroup(selectionId):
@@ -52,26 +56,26 @@ class ChatWindow(QMainWindow):
             self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), selectionId)
 
     def loadGroupChat(self, groupId):
-        messages = self.dbManager.getGroupMessages(groupId)
-        if messages is not None:
-            self.addMessageToChat(messages)
+        def onMessagesFetched(messages):
+            if messages is not None:
+                self.addMessageToChat(messages)
+        self.dbManager.getGroupMessages(groupId, callback=onMessagesFetched)
 
     def loadChatsBetweenUsers(self, currentUserId, receiverId):
-        messages = self.dbManager.getChatMessages(currentUserId, receiverId)
-        if messages is not None:
-            self.addMessageToChat(messages)
+        self.dbManager.instance().getChatMessages(currentUserId, receiverId, callback=self.addMessageToChat)
 
     def addMessageToChat(self, messages):
-        """Adds a new item to the QListView"""
-        self.chatModel.clear()
-        for message in messages:
-            userId = message.getSenderId()
-            username = self.dbManager.getUsernameById(userId)
-            timestamp = message.getTimestamp()
-            content = message.getContent()
-            formatted_text = f"{username}   {timestamp}\n{content}\n"
-            item = QStandardItem(formatted_text)
-            self.chatModel.appendRow(item)
+        if messages is not None:
+            self.chatModel.clear()
+            for message in messages:
+                userId = message.getSenderId()
+                timestamp = message.getTimestamp()
+                content = message.getContent()
+                def handleUsername(username, ts=timestamp, text=content):
+                    formatted_text = f"{username}   {ts}\n{text}\n"
+                    item = QStandardItem(formatted_text)
+                    self.chatModel.appendRow(item)
+                self.dbManager.instance().getUsernameById(userId, callback=handleUsername)
 
     def sendMessage(self):
         message = self.messageLine.text()
@@ -79,18 +83,24 @@ class ChatWindow(QMainWindow):
         idSender = self.loginSession.getCurrentId()
         receiverUsername, idReceiver = self.getSelectedContact()
         timestamp = datetime.now()
-        self.dbManager.insertNewChatMessage(ID, message, idSender, idReceiver, timestamp)
-        self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), idReceiver)
-        print(f"The full data sent to the database is {message}, {idSender}, {idReceiver}, {timestamp}")
+        print("insertat message")
+        def onMessageInserted(_):
+            self.loadChatsBetweenUsers(idSender, idReceiver)
+            print(f"The full data sent to the database is {message}, {idSender}, {idReceiver}, {timestamp}")
 
+        self.dbManager.insertNewChatMessage(ID, message, idSender, idReceiver, timestamp, callback=onMessageInserted)
 
     def searchForUsers(self):
         self.contactsModel.clear()
         inputUsername = self.searchContacts.text()
-        self.contacts = self.dbManager.getAllContacts(self.loginSession.getCurrentId())
-        for contact in self.contacts:
-            username, user_id = contact
-            if inputUsername in username:
+        self.dbManager.getAllContacts(
+            self.loginSession.getCurrentId(),
+            callback=lambda contacts: self.filterUsers(contacts, inputUsername)
+        )
+
+    def filterUsers(self, contacts, inputUsername):
+        for username, user_id in contacts:
+            if inputUsername.lower() in username.lower():
                 item = QStandardItem(username)
                 item.setData(user_id, Qt.ItemDataRole.UserRole)
                 self.contactsModel.appendRow(item)
@@ -109,26 +119,44 @@ class ChatWindow(QMainWindow):
     def downloadConversationXML(self):
         selection, selectionId = self.getSelectedContact()
         if self.dbManager.isGroup(selectionId):
-            messages = self.dbManager.getGroupMessages(selectionId)
-            self.downloadMessagesInXML(messages)
-            print(f"The messages are {messages}")
+            self.dbManager.getGroupMessages(selectionId, callback=self.onMessagesFetched)
         else:
-            messages = self.dbManager.getChatMessages(self.loginSession.getCurrentId(), selectionId)
-            self.downloadMessagesInXML(messages)
-            print(f"The messages are {messages}")
+            self.dbManager.getChatMessages(
+                self.loginSession.getCurrentId(),
+                selectionId,
+                callback=self.onMessagesFetched
+            )
+
+    def onMessagesFetched(self, messages):
+        self.downloadMessagesInXML(messages)
+        print(f"The messages are {messages}")
 
     def downloadMessagesInXML(self, listOfMessages):
         formattedMessages = []
-        for message in listOfMessages:
-            formattedMessages.append(self.message_to_dict(message))
-        XMLoutput.save_chat_to_xml(formattedMessages)
+        remaining = len(listOfMessages)
 
-    def message_to_dict(self, messageObject):
-        return {
-            "sender": self.dbManager.getUsernameById(messageObject.getSenderId()),
-            "timestamp": messageObject.getTimestamp().isoformat(),
-            "content": messageObject.getContent()
-        }
+        def onSingleMessageFormatted(msg_dict):
+            nonlocal remaining
+            formattedMessages.append(msg_dict)
+            remaining -= 1
+            print(f"Remaining je {remaining}")
+            if remaining == 0:
+                XMLoutput.save_chat_to_xml(formattedMessages)
+
+        for message in listOfMessages:
+            self.message_to_dict(message, callback=onSingleMessageFormatted)
+
+
+    def message_to_dict(self, messageObject, callback):
+        def onUsernameReceived(username):
+            result = {
+                "sender": username,
+                "timestamp": messageObject.getTimestamp().isoformat(),
+                "content": messageObject.getContent()
+            }
+            callback(result)
+
+        self.dbManager.getUsernameById(messageObject.getSenderId(), callback=onUsernameReceived)
 
     def openNewGroup(self):
         self.newGroupSignal.emit()

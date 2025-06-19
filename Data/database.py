@@ -5,7 +5,8 @@ from Data.user import User
 from Data.message import Message
 from Data.chat_group import Chat_group
 from Data.Helpers import jsonLogger
-
+import threading
+import datetime
 sys.stdout.reconfigure(encoding='utf-8')
 
 class DBTask(QRunnable):
@@ -17,15 +18,17 @@ class DBTask(QRunnable):
 
     @pyqtSlot()
     def run(self):
+        now = datetime.datetime.now()
+        timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        print(f"[{timestamp}] [DBTask] ID Threada: {threading.get_ident()} | Ime: {threading.current_thread().name}\n")
+
         result = None
         if self.mutex:
-            print("Mutex is locked")
             self.mutex.lock()
         try:
             result = self.fn()
         finally:
             if self.mutex:
-                print("Mutex is unlocked")
                 self.mutex.unlock()
 
         if self.callback:
@@ -40,16 +43,18 @@ class DatabaseManager(QObject):
             raise Exception("Use DatabaseManager.instance()")
 
         try:
-            print("Connecting to database...")
-            self.db = mysql.connector.connect(
+            print("Creating database connection pool...")
+            self.pool = mysql.connector.pooling.MySQLConnectionPool(
+                pool_name="mypool",
+                pool_size=4,
+                pool_reset_session=True,
                 host="localhost",
                 user="root",
                 password="root",
                 database="pythonchatapp"
             )
-            self.cursor = self.db.cursor()
-            print("Database connection successful!")
-            jsonLogger.write_log("Connection to database is successful!", "INFO")
+            print("Connection pool created successfully!")
+            jsonLogger.write_log("Connection pool initialized successfully!", "INFO")
         except mysql.connector.Error as err:
             print(f"Database connection error: {err}")
             sys.exit(1)
@@ -65,151 +70,255 @@ class DatabaseManager(QObject):
             DatabaseManager()
         return DatabaseManager._instance
 
-    def runAsync(self, fn, callback=None):
-        task = DBTask(fn=fn, callback=callback, mutex=self.mutex)
+    def get_connection(self):
+        return self.pool.get_connection()
+
+    def runAsync(self, fn, callback=None, use_mutex=False):
+        mutex = self.mutex if use_mutex else None
+        task = DBTask(fn=fn, callback=callback, mutex=mutex)
+        print(f"Thread pool probaj pokrenut task {task.fn}")
         self.threadPool.start(task)
 
     def getUsersInfo(self, var, callback):
         def query():
-            self.cursor.execute("SELECT * FROM user")
-            result = self.cursor.fetchall()
-            if result:
-                if var == "nameAndPassword":
-                    return [User(*row).getNameAndPassword() for row in result]
-                else:
-                    return [User(*row).getUsername() for row in result]
-            return None
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT * FROM user")
+                result = cursor.fetchall()
+                if result:
+                    if var == "nameAndPassword":
+                        return [User(*row).getNameAndPassword() for row in result]
+                    else:
+                        return [User(*row).getUsername() for row in result]
+                return None
+            finally:
+                cursor.close()
+                conn.close()
         self.runAsync(query, callback)
 
     def getIdByUsername(self, username, callback):
         def query():
-            self.cursor.execute("SELECT ID FROM user WHERE username = %s", (username,))
-            result = self.cursor.fetchone()
-            return result[0] if result else None
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT ID FROM user WHERE username = %s", (username,))
+                result = cursor.fetchone()
+                return result[0] if result else None
+            finally:
+                cursor.close()
+                conn.close()
         self.runAsync(query, callback)
 
     def getUsernameById(self, id, callback):
         def query():
-            self.cursor.execute("SELECT username FROM user WHERE id = %s", (id,))
-            result = self.cursor.fetchone()
-            return result[0] if result else None
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT username FROM user WHERE id = %s", (id,))
+                result = cursor.fetchone()
+                return result[0] if result else None
+            finally:
+                cursor.close()
+                conn.close()
         self.runAsync(query, callback)
 
     def insertNewUser(self, ID, name, surname, dateOfBirth, email, username, password, role, callback=None):
         def query():
-            self.cursor.execute(
-                """INSERT INTO user (ID, name, surname, dateOfBirth, email, username, password, role)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-                (ID, name, surname, dateOfBirth, email, username, password, role)
-            )
-            self.db.commit()
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    """INSERT INTO user (ID, name, surname, dateOfBirth, email, username, password, role)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (ID, name, surname, dateOfBirth, email, username, password, role)
+                )
+                conn.commit()
+            finally:
+                cursor.close()
+                conn.close()
         self.runAsync(query, callback)
 
     def getAllUsers(self, currentUserId, callback):
         def query():
-            self.cursor.execute("SELECT u.username, u.ID FROM user u WHERE u.ID != %s", (currentUserId,))
-            result = self.cursor.fetchall()
-            return [(row[0], row[1]) for row in result] if result else None
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT u.username, u.ID FROM user u WHERE u.ID != %s", (currentUserId,))
+                result = cursor.fetchall()
+                return [(row[0], row[1]) for row in result] if result else None
+            finally:
+                cursor.close()
+                conn.close()
         self.runAsync(query, callback)
 
     def getAllContacts(self, currentUserId, callback):
         def query():
-            self.cursor.execute("""
-                SELECT DISTINCT contact_name,contact_id
-                FROM (
-                    SELECT u.ID AS contact_id, u.username AS contact_name
-                    FROM user u
-                    WHERE u.ID != %s
-                    UNION
-                    SELECT g.ID AS contact_id, g.name AS contact_name
-                    FROM chat_group g
-                ) AS contacts;
-            """, (currentUserId,))
-            result = self.cursor.fetchall()
-            return [(row[0], row[1]) for row in result] if result else None
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    SELECT DISTINCT contact_name,contact_id
+                    FROM (
+                        SELECT u.ID AS contact_id, u.username AS contact_name
+                        FROM user u
+                        WHERE u.ID != %s
+                        UNION
+                        SELECT g.ID AS contact_id, g.name AS contact_name
+                        FROM chat_group g
+                    ) AS contacts;
+                """, (currentUserId,))
+                result = cursor.fetchall()
+                print(f"Rezultat getallcontacts je {result}")
+                return [(row[0], row[1]) for row in result] if result else None
+            finally:
+                cursor.close()
+                conn.close()
         self.runAsync(query, callback)
 
     def getContacts(self, userId, callback):
         def query():
-            self.cursor.execute("""
-                SELECT DISTINCT * FROM (
-                    SELECT DISTINCT u.username, u.ID
-                    FROM message m
-                    JOIN user u ON (m.IDSender = u.ID AND m.IDReceiver = %s) OR (m.IDReceiver = u.ID AND m.IDSender = %s)
-                    WHERE u.ID != %s
-                    UNION
-                    SELECT chat_group.name, chat_group.ID
-                    FROM chat_group_members
-                    JOIN chat_group ON chat_group_members.IDGroup = chat_group.ID
-                    JOIN message ON chat_group.ID = message.GroupID
-                    WHERE chat_group_members.IDUser = %s
-                ) AS contacts;
-            """, (userId, userId, userId, userId))
-            result = self.cursor.fetchall()
-            return [(row[0], row[1]) for row in result] if result else None
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    SELECT DISTINCT * FROM (
+                        SELECT DISTINCT u.username, u.ID
+                        FROM message m
+                        JOIN user u ON (m.IDSender = u.ID AND m.IDReceiver = %s) OR (m.IDReceiver = u.ID AND m.IDSender = %s)
+                        WHERE u.ID != %s
+                        UNION
+                        SELECT chat_group.name, chat_group.ID
+                        FROM chat_group_members
+                        JOIN chat_group ON chat_group_members.IDGroup = chat_group.ID
+                        JOIN message ON chat_group.ID = message.GroupID
+                        WHERE chat_group_members.IDUser = %s
+                    ) AS contacts;
+                """, (userId, userId, userId, userId))
+                result = cursor.fetchall()
+                return [(row[0], row[1]) for row in result] if result else None
+            finally:
+                cursor.close()
+                conn.close()
         self.runAsync(query, callback)
 
     def getChatMessages(self, currentUserId, receiverId, callback):
         def query():
-            self.cursor.execute("""
-                SELECT * FROM message
-                WHERE (IDSender = %s AND IDReceiver = %s) OR (IDSender = %s AND IDReceiver = %s)
-                ORDER BY timestamp ASC;
-            """, (currentUserId, receiverId, receiverId, currentUserId))
-            result = self.cursor.fetchall()
-            return [Message(*row) for row in result] if result else None
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    SELECT * FROM message
+                    WHERE (IDSender = %s AND IDReceiver = %s) OR (IDSender = %s AND IDReceiver = %s)
+                    ORDER BY timestamp ASC;
+                """, (currentUserId, receiverId, receiverId, currentUserId))
+                result = cursor.fetchall()
+                return [Message(*row) for row in result] if result else None
+            finally:
+                cursor.close()
+                conn.close()
         self.runAsync(query, callback)
 
     def getGroupMessages(self, groupId, callback):
         def query():
-            self.cursor.execute("SELECT * FROM message WHERE GroupID = %s ORDER BY timestamp ASC;", (groupId,))
-            result = self.cursor.fetchall()
-            return [Message(*row) for row in result] if result else None
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT * FROM message WHERE GroupID = %s ORDER BY timestamp ASC;", (groupId,))
+                result = cursor.fetchall()
+                return [Message(*row) for row in result] if result else None
+            finally:
+                cursor.close()
+                conn.close()
         self.runAsync(query, callback)
 
     def insertNewChatMessage(self, ID, content, IDSender, whichID, timestamp, callback=None):
         def query():
-            if self.isGroup(whichID):
-                self.insertNewGroupMessage(ID, content, IDSender, whichID, timestamp)
-            else:
-                self.insertNewDirectMessage(ID, content, IDSender, whichID, timestamp)
-        self.runAsync(query, callback)
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                if self.isGroup(whichID, conn, cursor):
+                    #Nova grupna poruka
+                    cursor.execute("""
+                        INSERT INTO message (ID, content, IDSender, GroupId, IDReceiver, timestamp)
+                        VALUES (%s, %s, %s, %s, NULL, %s)
+                    """, (ID, content, IDSender, whichID, timestamp))
+                    conn.commit()
+                else:
+                    #nova direktna poruka
+                    cursor.execute("""
+                        INSERT INTO message (ID, content, IDSender, GroupId, IDReceiver, timestamp)
+                        VALUES (%s, %s, %s, NULL, %s, %s)
+                    """, (ID, content, IDSender, whichID, timestamp))
+                    conn.commit()
+            finally:
+                cursor.close()
+                conn.close()
+        self.runAsync(query, callback, use_mutex=True)
 
-    def insertNewGroupMessage(self, ID, content, IDSender, GroupID, timestamp):
-        self.cursor.execute("""
-            INSERT INTO message (ID, content, IDSender, GroupId, IDReceiver, timestamp)
-            VALUES (%s, %s, %s, %s, NULL, %s)
-        """, (ID, content, IDSender, GroupID, timestamp))
-        self.db.commit()
+    def isGroup(self, groupID, conn=None, cursor=None):
+        # Pošto se poziva na vise mjesta moguce je pozvat funk bez conn i cursora, u tom slucaju se uzima novi mysql conn thread
+        own_conn = own_cursor = False
+        if conn is None or cursor is None:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            own_conn = own_cursor = True
 
-    def insertNewDirectMessage(self, ID, content, IDSender, IDReceiver, timestamp):
-        self.cursor.execute("""
-            INSERT INTO message (ID, content, IDSender, GroupId, IDReceiver, timestamp)
-            VALUES (%s, %s, %s, NULL, %s, %s)
-        """, (ID, content, IDSender, IDReceiver, timestamp))
-        self.db.commit()
+        try:
+            groupIDsInDB = self.getGroupIdSync(conn, cursor)
+            return groupID in groupIDsInDB if groupIDsInDB else False
+        finally:
+            if own_cursor:
+                cursor.close()
+            if own_conn:
+                conn.close()
 
-    def isGroup(self, groupID):
-        groupIDsInDB = self.getGroupIdSync()
-        return groupID in groupIDsInDB if groupIDsInDB else False
+    def getGroupIdSync(self, conn=None, cursor=None):
+        own_conn = own_cursor = False
+        if conn is None or cursor is None:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            own_conn = own_cursor = True
 
-    def getGroupIdSync(self):
-        self.cursor.execute("SELECT ID FROM chat_group")
-        result = self.cursor.fetchall()
-        return [row[0] for row in result] if result else None
+        try:
+            cursor.execute("SELECT ID FROM chat_group")
+            result = cursor.fetchall()
+            return [row[0] for row in result] if result else None
+        finally:
+            if own_cursor:
+                cursor.close()
+            if own_conn:
+                conn.close()
 
     def insertNewGroup(self, id, name, callback=None):
         def query():
-            self.cursor.execute("INSERT INTO chat_group (ID, name) VALUES (%s, %s)", (id, name))
-            self.db.commit()
-        self.runAsync(query, callback)
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT COUNT(*) FROM chat_group WHERE ID = %s", (id,))
+                count = cursor.fetchone()[0]
+                if count == 0:
+                    cursor.execute("INSERT INTO chat_group (ID, name) VALUES (%s, %s)", (id, name))
+                    conn.commit()
+                else:
+                    print(f"[DEBUG] Grupa {id} već postoji — preskačem unos.")
+            finally:
+                cursor.close()
+                conn.close()
+        self.runAsync(query, callback, use_mutex=True)
 
     def insertGroupMember(self, ID, IDGroup, IDUser, callback=None):
         def query():
-            self.cursor.execute("INSERT INTO chat_group_members (ID, IDGroup, IDUser) VALUES (%s, %s, %s)", (ID, IDGroup, IDUser))
-            self.db.commit()
-        self.runAsync(query, callback)
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("INSERT INTO chat_group_members (ID, IDGroup, IDUser) VALUES (%s, %s, %s)", (ID, IDGroup, IDUser))
+                conn.commit()
+            finally:
+                cursor.close()
+                conn.close()
+        self.runAsync(query, callback, use_mutex=True)
 
     def close(self):
-        self.cursor.close()
-        self.db.close()
+        self.pool = None
+        print("Connection pool cleared.")

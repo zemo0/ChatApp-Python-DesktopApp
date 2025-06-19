@@ -27,30 +27,32 @@ class RegistrationWindow(QMainWindow):
         confirmPasswordInput = self.confirmPasswordLine.text()
         roleInput = self.comboBox.currentText()
 
-        #provjera pass i duplikata usernamea
-        if self.doChecks(usernameInput, passwordInput, confirmPasswordInput):
-            storedId = cryptoFunctions.prepId(usernameInput)
-            self.dbManager.insertNewUser(storedId, nameInput, surnameInput, dateInput, emailInput, usernameInput,
-                                         passwordInput, roleInput)
-            print("Registracija korisnika je uspješna!")
-        else:
-            print("Neuspješna registracija")
+        def onUsersFetched(usernames):
+            if usernames is None:
+                usernames = []
 
-    def doChecks(self, usernameInput, passwordInput, confirmPasswordInput):
-        dbUsernames = self.dbManager.getUsersInfo("username")
-        print(dbUsernames)
-        if dbUsernames is None:
-            print("No users in DB, registration goes through")
-            return True
-        if usernameInput in dbUsernames:
-            self.infoLabel.setText("to korisničko ime već postoji, probajte neko drugo")
-            return False
-        elif not self.isValidPassword(passwordInput, confirmPasswordInput):
-            self.infoLabel.setText("lozinka nije dobra, mora imati barem 8 znakova, 1 broj i 1 specijalan znak")
-            return False
-        else:
-            self.infoLabel.setText("")
-            return True
+            if usernameInput in usernames:
+                self.infoLabel.setText("To korisničko ime već postoji, probajte neko drugo")
+                print("Korisničko ime već postoji.")
+                return
+            elif not self.isValidPassword(passwordInput, confirmPasswordInput):
+                self.infoLabel.setText("Lozinka nije dobra, mora imati barem 8 znakova, 1 broj i 1 specijalan znak")
+                print("Lozinka nije validna.")
+                return
+            else:
+                self.infoLabel.setText("")
+
+            storedId = cryptoFunctions.prepId(usernameInput)
+
+            def onUserInserted(_):
+                print("Registracija korisnika je uspješna!")
+
+            self.dbManager.insertNewUser(
+                storedId, nameInput, surnameInput, dateInput, emailInput,
+                usernameInput, passwordInput, roleInput, callback=onUserInserted
+            )
+
+        self.dbManager.getUsersInfo("username", callback=onUsersFetched)
 
     def isValidPassword(self, password, confirmPassword):
         pattern = r'^(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$'
