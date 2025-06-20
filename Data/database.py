@@ -1,5 +1,6 @@
 from PyQt6.QtCore import QObject, QMutex, QThreadPool, QRunnable, pyqtSlot
 import mysql.connector
+from mysql.connector import Binary
 import sys
 from Data.user import User
 from Data.message import Message
@@ -46,7 +47,7 @@ class DatabaseManager(QObject):
             print("Creating database connection pool...")
             self.pool = mysql.connector.pooling.MySQLConnectionPool(
                 pool_name="mypool",
-                pool_size=2,
+                pool_size=4,
                 pool_reset_session=True,
                 host="localhost",
                 user="root",
@@ -61,7 +62,7 @@ class DatabaseManager(QObject):
 
         self.mutex = QMutex()
         self.threadPool = QThreadPool()
-        self.threadPool.setMaxThreadCount(2)
+        self.threadPool.setMaxThreadCount(4)
         DatabaseManager._instance = self
 
     @staticmethod
@@ -232,25 +233,42 @@ class DatabaseManager(QObject):
                 conn.close()
         self.runAsync(query, callback)
 
-    def insertNewChatMessage(self, ID, content, IDSender, whichID, timestamp, callback=None):
+    def insertNewChatMessage(self, ID, content, IDSender, whichID, timestamp, attachment=None, attachment_name=None, callback=None):
         def query():
+            print("Unutar query za insert msg sam")
             conn = self.get_connection()
             cursor = conn.cursor()
             try:
+                print("Provjeri je li grupa")
                 if self.isGroup(whichID, conn, cursor):
-                    #Nova grupna poruka
-                    cursor.execute("""
-                        INSERT INTO message (ID, content, IDSender, GroupId, IDReceiver, timestamp)
-                        VALUES (%s, %s, %s, %s, NULL, %s)
-                    """, (ID, content, IDSender, whichID, timestamp))
-                    conn.commit()
+                    print("Prije sendquery sam u grupi")
+                    # Grupna poruka
+                    sendQuery = """
+                        INSERT INTO message
+                        (ID, content, IDSender, GroupId, IDReceiver, timestamp, attachment, attachment_name)
+                        VALUES (%s, %s, %s, %s, NULL, %s, %s, %s)
+                    """
+                    print("query unesen, provjeri blob")
+                    blob_data = Binary(attachment) if attachment is not None else None
+                    attachment_name_data = attachment_name if attachment is not None else None
+                    values = (ID, content, IDSender, whichID, timestamp, blob_data, attachment_name_data)
+                    print(f"Values is {values}")
                 else:
-                    #nova direktna poruka
-                    cursor.execute("""
-                        INSERT INTO message (ID, content, IDSender, GroupId, IDReceiver, timestamp)
-                        VALUES (%s, %s, %s, NULL, %s, %s)
-                    """, (ID, content, IDSender, whichID, timestamp))
-                    conn.commit()
+                    # Direktna poruka
+                    print("Prije sendquery sam u direktnoj")
+                    sendQuery = """
+                            INSERT INTO message
+                            (ID, content, IDSender, GroupID, IDReceiver, timestamp, attachment, attachment_name)
+                            VALUES (%s, %s, %s, NULL, %s, %s, %s, %s)
+                        """
+                    print("query setiran, probaj blob")
+                    blob_data = Binary(attachment) if attachment is not None else None
+                    attachment_name_data = attachment_name if attachment is not None else None
+                    print("query unesen, provjeri blob")
+                    values = (ID, content, IDSender, whichID, timestamp, blob_data, attachment_name_data)
+                    print(f"Values is {values}")
+                cursor.execute(sendQuery, values)
+                conn.commit()
             finally:
                 cursor.close()
                 conn.close()

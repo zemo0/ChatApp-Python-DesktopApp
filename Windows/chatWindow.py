@@ -1,10 +1,12 @@
+import base64
 import json
+import os
 import socket
 import threading
 from datetime import datetime
-from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt, QTimer, QMetaObject, Q_ARG, pyqtSlot
-from PyQt6.QtGui import QStandardItemModel, QStandardItem
-from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt, QTimer, QMetaObject, Q_ARG, pyqtSlot, QUrl
+from PyQt6.QtGui import QStandardItemModel, QStandardItem, QDesktopServices
+from PyQt6.QtWidgets import QMainWindow, QFileDialog
 from PyQt6 import uic
 from Data import database
 from Data.Helpers import cryptoFunctions
@@ -25,7 +27,10 @@ class ChatWindow(QMainWindow):
         self.dbManager = database.DatabaseManager.instance() #db connector
         self.chatModel = QStandardItemModel()
         self.contactsModel = QStandardItemModel()
+        self.selectedAttachment = None
+        self.toolButton.clicked.connect(self.selectAttachment)
         self.chatView.setModel(self.chatModel)
+        self.chatView.clicked.connect(self.onChatItemClicked)
         self.contactsView.setModel(self.contactsModel)
         self.contactsView.clicked.connect(self.onContactClicked)
         self.pushButton.clicked.connect(self.sendMessage)
@@ -40,10 +45,12 @@ class ChatWindow(QMainWindow):
     def connectToTCPServer(self):
         self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_socket.connect(("127.0.0.1", 9010))
-        self.tcp_socket.sendall(json.dumps({
-            'type': 'register',
-            'user_id': self.loginSession.getCurrentId()
-        }).encode('utf-8'))
+        self.tcp_socket.sendall((
+                json.dumps({
+                    'type': 'register',
+                    'user_id': self.loginSession.getCurrentId()
+                }) + "\n"
+        ).encode('utf-8'))
 
         threading.Thread(target=self.startTCPListener, daemon=True).start()
 
@@ -57,7 +64,9 @@ class ChatWindow(QMainWindow):
                     if msg['type'] == 'new_message':
                         print("Stigla nova poruka, dobio signal na chatWindow")
                         sender_id = msg['from']
+                        print("Sender id dobar")
                         my_id = self.loginSession.getCurrentId()
+                        print("my_id dobar")
                         _, selected_contact = self.getSelectedContact()
                         print(f"pošiljatelj je {sender_id}, currentid je {my_id} i odabrani kontakt je {selected_contact}")
                         if selected_contact == sender_id:
@@ -177,14 +186,27 @@ class ChatWindow(QMainWindow):
         if messages is not None:
             self.chatModel.clear()
             for message in messages:
-                print(f"All messages to add are {messages}")
                 userId = message.getSenderId()
                 timestamp = message.getTimestamp()
                 content = message.getContent()
-                def handleUsername(username, ts=timestamp, text=content):
+                attachment = message.getAttachment()
+                attachment_name = message.getAttachmentName()
+                def handleUsername(username, ts=timestamp, text=content, att=attachment, att_name=attachment_name):
                     formatted_text = f"{username}   {ts}\n{text}\n"
+
                     item = QStandardItem(formatted_text)
+
+                    if att and att_name:
+                        os.makedirs("downloads", exist_ok=True)
+                        save_path = os.path.join("downloads", att_name)
+                        with open(save_path, 'wb') as f:
+                            f.write(att)
+                        formatted_text += f"[📎 {att_name}]\n"
+                        item.setText(formatted_text)
+                        item.setData(save_path, Qt.ItemDataRole.UserRole + 1)
+
                     self.chatModel.appendRow(item)
+
                 self.dbManager.instance().getUsernameById(userId, callback=handleUsername)
 
     def sendMessage(self):
@@ -193,19 +215,41 @@ class ChatWindow(QMainWindow):
         idSender = self.loginSession.getCurrentId()
         receiverUsername, idReceiver = self.getSelectedContact()
         timestamp = datetime.now()
+
+        attachment_data = None
+        attachment_name = None
+        print("Unutar send messagea sam")
+        if self.selectedAttachment:
+            print("unutar if za attachement sam")
+            path, name = self.selectedAttachment
+            print(f"Path je {path} i ime je {name}")
+            try:
+                with open(path, 'rb') as f:
+                    raw_data = f.read()
+                    attachment_data = base64.b64encode(raw_data).decode('utf-8') #b64 format za datoteku
+                    attachment_name = name
+                    message = message.replace(f"📎 {name}", "").strip()
+            except Exception as e:
+                print(f"[ATTACHMENT ERROR] Ne mogu učitati privitak: {e}")
+                self.selectedAttachment = None
+        print(f"Dosao do payloada, attachementdata je {attachment_data} i ime je {attachment_name}")
         payload = {
             'type': 'chat_message',
             'message_id': ID,
             'from': idSender,
             'to': idReceiver,
             'content': message,
-            'timestamp': timestamp.isoformat() #crasha ako nije ISO standard
+            'timestamp': timestamp.isoformat(),
+            'attachment': attachment_data,
+            'attachment_name': attachment_name
         }
 
         try:
-            self.tcp_socket.sendall(json.dumps(payload).encode('utf-8'))
+            print(f"[DEBUG] Slanje: {json.dumps(payload)}")
+            self.tcp_socket.sendall((json.dumps(payload) + "\n").encode("utf-8"))
             self.messageLine.clear()
-            QTimer.singleShot(1000, lambda: self.loadChatsBetweenUsers(idSender, idReceiver)) #nakon 1s osvježi chat
+            self.selectedAttachment = None
+            QTimer.singleShot(1000, lambda: self.loadChatsBetweenUsers(idSender, idReceiver))
         except Exception as e:
             print(f"[SEND ERROR] {e}")
 
@@ -225,6 +269,7 @@ class ChatWindow(QMainWindow):
                 self.contactsModel.appendRow(item)
 
     def getSelectedContact(self):
+        print("U get selected contact selection je")
         selection = self.contactsView.selectedIndexes()
         print(f"Selection is {selection}")
         if selection:
@@ -282,6 +327,24 @@ class ChatWindow(QMainWindow):
 
     def openSettingsDialog(self):
         self.openSettingsSignal.emit()
+
+    def selectAttachment(self):
+        print("priložen je attachement ")
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(self, "Odaberi datoteku")
+        if file_path:
+            self.selectedAttachment = (file_path, os.path.basename(file_path))
+            existing = self.messageLine.text()
+            self.messageLine.setText(f"{existing} 📎 {os.path.basename(file_path)}")
+        else:
+            self.selectedAttachment = None
+
+    def onChatItemClicked(self, index):
+        print("Stisnut je attachement u chatu")
+        path = index.data(Qt.ItemDataRole.UserRole + 1)
+        if path and os.path.exists(path):
+            QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+
 
     def closeEvent(self, event):
         self.notifyServerOfflineUDP()
