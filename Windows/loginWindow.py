@@ -1,3 +1,4 @@
+import requests
 from PyQt6.QtWidgets import QMainWindow, QLabel
 from PyQt6 import uic
 from PyQt6.QtCore import pyqtSignal
@@ -25,16 +26,22 @@ class LoginWindow(QMainWindow):
     def onButtonClick(self):
         usernameInput = self.usernameLine.text()
         passwordInput = self.passwordLine.text()
-        self.dbManager.getUsersInfo("nameAndPassword", callback=lambda users: self.handleLogin(users, usernameInput, passwordInput))
 
-    def handleLogin(self, dbUsers, usernameInput, passwordInput):
-        print(f"korisnici su {dbUsers}")
-        if (usernameInput, passwordInput) in dbUsers:
-            print("Dobar login, ide u chat")
-            self.dbManager.getIdByUsername(usernameInput, callback=lambda userId: self.finishLogin(usernameInput, userId))
-        else:
-            print("Loš login")
-            self.errorLabel.setText("Neuspješna prijava, probajte ponovno")
+        try:
+            response = requests.post("http://localhost:5000/api/login", json={
+                "username": usernameInput,
+                "password": passwordInput
+            })
+
+            if response.status_code == 200:
+                print("Login uspješan")
+                self.dbManager.getIdByUsername(usernameInput, callback=lambda userId: self.finishLogin(usernameInput, userId))
+            else:
+                print("Login neuspješan")
+                self.errorLabel.setText("Neuspješna prijava, probajte ponovno")
+
+        except Exception as e:
+            print("Greška pri spajanju na server:", e)
 
     def finishLogin(self, username, userId):
         self.loginSession.login(username, userId)

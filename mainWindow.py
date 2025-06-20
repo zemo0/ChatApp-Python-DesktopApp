@@ -1,7 +1,7 @@
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import QtWidgets
 import sys
-
 from Windows.settingsWindow import SettingsWindow
 from Windows.groupWindow import GroupWindow
 from Windows.loginWindow import LoginWindow
@@ -37,6 +37,7 @@ class Main(QMainWindow):
         self.chatWindow.loadContacts()
         self.settingsWindow.load_settings(self.chatWindow, self.groupWindow)
         self.loginWindow.hide()
+        self.chatWindow.triggerAdminCheck()
 
     def showAddGroupWindow(self):
         print("Group window is now showing")

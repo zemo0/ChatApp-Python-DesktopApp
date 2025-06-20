@@ -337,6 +337,61 @@ class DatabaseManager(QObject):
                 conn.close()
         self.runAsync(query, callback, use_mutex=True)
 
+    def getUserRoleById(self, user_id, callback):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT role FROM user WHERE ID = %s", (user_id,))
+                result = cursor.fetchone()
+                return result[0] if result else None
+            finally:
+                cursor.close()
+                conn.close()
+        self.runAsync(query, callback)
+
+    def getAllUsersFullInfo(self, callback):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    SELECT ID, name, surname, dateOfBirth, email, username, password, role
+                    FROM user
+                """)
+                result = cursor.fetchall()
+                return [
+                    {
+                        "ID": row[0],
+                        "name": row[1],
+                        "surname": row[2],
+                        "dateOfBirth": row[3],
+                        "email": row[4],
+                        "username": row[5],
+                        "password": row[6],
+                        "role": row[7]
+                    }
+                    for row in result
+                ] if result else None
+            finally:
+                cursor.close()
+                conn.close()
+        self.runAsync(query, callback)
+
+    def getMessageCountByUserId(self, user_id, callback):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT COUNT(*) FROM message WHERE IDSender = %s", (user_id,))
+                result = cursor.fetchone()
+                return result[0] if result else 0
+            finally:
+                cursor.close()
+                conn.close()
+        self.runAsync(query, callback)
+
+
     def close(self):
         self.pool = None
         print("Connection pool cleared.")

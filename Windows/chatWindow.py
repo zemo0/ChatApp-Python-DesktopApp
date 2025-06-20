@@ -4,14 +4,16 @@ import os
 import socket
 import threading
 from datetime import datetime
+import requests
 from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt, QTimer, QMetaObject, Q_ARG, pyqtSlot, QUrl
-from PyQt6.QtGui import QStandardItemModel, QStandardItem, QDesktopServices
+from PyQt6.QtGui import QStandardItemModel, QStandardItem, QDesktopServices, QAction
 from PyQt6.QtWidgets import QMainWindow, QFileDialog
 from PyQt6 import uic
 from Data import database
 from Data.Helpers import cryptoFunctions
 from Data.userSession import UserSession
 from Data.Helpers import XMLoutput
+from Windows.adminWindow import AdminWindow
 
 class ChatWindow(QMainWindow):
     newGroupSignal = pyqtSignal()
@@ -19,6 +21,9 @@ class ChatWindow(QMainWindow):
     loginSession = UserSession()
     def __init__(self):
         super().__init__()
+        self.adminAction = None
+        self.fileMenu = None
+        self.menubar = None
         self.tcp_socket = None
         uic.loadUi("UI/chatScreen.ui", self)
         print("The UI screen is loaded")
@@ -344,6 +349,35 @@ class ChatWindow(QMainWindow):
         path = index.data(Qt.ItemDataRole.UserRole + 1)
         if path and os.path.exists(path):
             QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+
+    def triggerAdminCheck(self):
+        user_id = self.loginSession.getCurrentId()
+        try:
+            response = requests.get("http://localhost:5000/api/get_role", params={"user_id": user_id})
+            if response.status_code == 200:
+                role = response.json().get("role")
+                print(f"Rola koju je server odgovorio je {role}")
+                self.handleRoleCheck(role)
+            else:
+                print("Greška kod provjere role:", response.text)
+        except Exception as e:
+            print("Pogreška pri spajanju na server:", e)
+
+    def handleRoleCheck(self, role):
+        print(f"Zavrsio u role check, rola je {role}")
+        if role == "Admin":
+            print("dodaj admin tab")
+            self.adminMenu = self.menubar.addMenu("Admin")
+            print("Dodaj admin akciju")
+            self.adminAction = QAction("Admin Panel", self)
+            self.adminAction.triggered.connect(self.showAdminTab)
+
+            self.adminMenu.addAction(self.adminAction)
+
+    def showAdminTab(self):
+        print("Admin tab bi se sada otvorio...")
+        self.adminWindow = AdminWindow()
+        self.adminWindow.show()
 
 
     def closeEvent(self, event):

@@ -1,6 +1,10 @@
 class UserSession:  # singleton klasa
     _instance = None
 
+    def __init__(self):
+        self.user_id = None
+        self.username = None
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(UserSession, cls).__new__(cls)
