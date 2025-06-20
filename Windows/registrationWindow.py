@@ -43,19 +43,19 @@ class RegistrationWindow(QMainWindow):
                 self.infoLabel.setText("")
 
             storedId = cryptoFunctions.prepId(usernameInput)
-
+            passwordHash = cryptoFunctions.encryptThenHash(passwordInput, usernameInput)
             def onUserInserted(_):
                 print("Registracija korisnika je uspješna!")
 
             self.dbManager.insertNewUser(
                 storedId, nameInput, surnameInput, dateInput, emailInput,
-                usernameInput, passwordInput, roleInput, callback=onUserInserted
+                usernameInput, passwordHash, roleInput, callback=onUserInserted
             )
 
         self.dbManager.getUsersInfo("username", callback=onUsersFetched)
 
     def isValidPassword(self, password, confirmPassword):
         pattern = r'^(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$'
-        if re.match(pattern, password) and len(password) > 8 and password == confirmPassword:
+        if re.match(pattern, password) and len(password) >= 8 and password == confirmPassword:
             return True
         return False

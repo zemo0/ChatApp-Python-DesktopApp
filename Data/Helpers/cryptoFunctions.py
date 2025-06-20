@@ -1,9 +1,17 @@
 import hashlib
 import os
-from Crypto.Cipher import PKCS1_OAEP
+import random
+import sys
+from Crypto.Cipher import PKCS1_OAEP, AES
 from Crypto.PublicKey import RSA
 import base64
-
+current_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.abspath(os.path.join(current_dir, '..', '..'))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+from config import AES_KEY, AES_IV
+from Crypto.Util.Padding import unpad, pad
+possible_peppers = ["Kotanyi", "Franck", "Sallant", "Sana", "Crni"]
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # OVO NE KORISTIT VIŠE, SAMO JEDAN PUT JE POTREBNO
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -14,7 +22,8 @@ import base64
 #    with open("Files/public_key.pem", "wb") as public_file:
 #        public_file.write(key.publickey().export_key())
 
-def encrypt_rsa(plain_text: str):
+#RSA za ideve
+def encryptRSA(plain_text: str):
     with open("files/public_key.pem", "rb") as pub_file:
         public_key = RSA.import_key(pub_file.read())
 
@@ -23,7 +32,7 @@ def encrypt_rsa(plain_text: str):
 
     return base64.b64encode(encrypted).decode()
 
-def decrypt_rsa(encrypted_text: str):
+def decryptRSA(encrypted_text: str):
     with open("files/private_key.pem", "rb") as priv_file:
         private_key = RSA.import_key(priv_file.read())
 
@@ -32,11 +41,32 @@ def decrypt_rsa(encrypted_text: str):
 
     return decrypted.decode()
 
-def hashTheId(id:str):
+def hashSHA256(id:str):
     primary_key = hashlib.sha256(id.encode()).hexdigest()
     return primary_key
 
-def prepId(id:str):
-    encryptedId = encrypt_rsa(id)
-    hashedId = hashTheId(encryptedId)
+def prepId(var:str):
+    encryptedId = encryptRSA(var)
+    hashedId = hashSHA256(encryptedId)
     return hashedId
+
+# AES za lozinke
+def encryptAES(plain_text: str) -> str:
+    cipher = AES.new(AES_KEY, AES.MODE_CBC, AES_IV)
+    encrypted_bytes = cipher.encrypt(pad(plain_text.encode(), AES.block_size))
+    return base64.b64encode(encrypted_bytes).decode()
+
+def encryptThenHash(password: str, username: str) -> str:
+    salt = username[::-1]
+    pepper = random.choice(possible_peppers)
+    combined = pepper + password + salt
+    return hashlib.sha256(combined.encode()).hexdigest()
+
+def verifyPassword(input_password, username, stored_hash):
+    salt = username[::-1]
+    for pepper in possible_peppers:
+        combined = pepper + input_password + salt
+        hashed = hashlib.sha256(combined.encode()).hexdigest()
+        if hashed == stored_hash:
+            return True
+    return False

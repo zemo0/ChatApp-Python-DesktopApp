@@ -333,5 +333,220 @@
         "timestamp": "2025-06-20T16:05:15.476727",
         "level": "INFO",
         "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:06:13.048871",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:06:13.974540",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:07:57.047303",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:07:57.203989",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:07:58.118797",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:11:34.815237",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:11:34.961790",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:11:35.813492",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:14:17.805501",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:14:17.955502",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:14:18.826996",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:14:54.179611",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:15:12.103015",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:15:12.284657",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:15:13.136161",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:15:27.798590",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:16:01.027966",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:34:58.993683",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:34:59.942992",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:38:49.071610",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:38:49.216223",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:38:50.087527",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:40:24.757561",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:40:24.906666",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:40:25.748687",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:41:37.044595",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:41:37.232891",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:41:38.049029",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:42:45.697538",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:42:45.892515",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:42:46.885632",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:43:25.368234",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:43:25.522310",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:43:26.383962",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:43:50.714931",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:44:17.843266",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:44:17.998817",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:44:18.831011",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:44:37.105996",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:44:43.213326",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:44:43.363977",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:44:44.172978",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
+    },
+    {
+        "timestamp": "2025-06-20T19:45:06.621491",
+        "level": "INFO",
+        "message": "Connection pool initialized successfully!"
     }
 ]

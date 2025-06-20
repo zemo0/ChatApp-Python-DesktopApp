@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
-
+from Data.Helpers import cryptoFunctions
 from Data.database import DatabaseManager
 
 app = Flask(__name__)
@@ -46,7 +46,7 @@ def login():
 
     def callback(users):
         for (db_username, db_password) in users:
-            if db_username == username and db_password == password:
+            if db_username == username and cryptoFunctions.verifyPassword(password, username,  db_password):
                 login_success["ok"] = True
                 break
         event.set()
