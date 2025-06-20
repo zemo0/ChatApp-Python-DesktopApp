@@ -1,3 +1,5 @@
+import traceback
+
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6 import QtWidgets
@@ -46,6 +48,16 @@ class Main(QMainWindow):
     def openSettingsDialog(self):
         self.settingsWindow.show()
 
+
+def handle_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        # Dozvoli normalan prekid programa (Ctrl+C)
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    print("Neočekivana greška u aplikaciji:")
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+
+sys.excepthook = handle_exception
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)

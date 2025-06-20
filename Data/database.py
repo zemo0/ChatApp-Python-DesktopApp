@@ -391,6 +391,60 @@ class DatabaseManager(QObject):
                 conn.close()
         self.runAsync(query, callback)
 
+    def updateUserById(self, user_id, data, callback=None):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            affected = -1
+            try:
+                fields = ['name', 'surname', 'dateOfBirth', 'email', 'username', 'password', 'role']
+                values = [data.get(field) for field in fields]
+                sql = """
+                    UPDATE user SET
+                        name = %s,
+                        surname = %s,
+                        dateOfBirth = %s,
+                        email = %s,
+                        username = %s,
+                        password = %s,
+                        role = %s
+                    WHERE ID = %s
+                """
+                cursor.execute(sql, (*values, user_id))
+                conn.commit()
+                affected = cursor.rowcount
+            except Exception as e:
+                conn.rollback()
+                print(f"[DB ERROR] updateUserById: {e}")
+            finally:
+                cursor.close()
+                conn.close()
+            return affected
+        self.runAsync(query, callback, use_mutex=True)
+
+
+    def deleteUserById(self, user_id, callback=None):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            affected = -1
+            try:
+                #mora ic delete poruka radi foreign key constrainta
+                cursor.execute("DELETE FROM chat_group_members WHERE IDUser = %s", (user_id,))
+                cursor.execute("DELETE FROM message WHERE IDSender = %s OR IDReceiver = %s", (user_id, user_id))
+                cursor.execute("DELETE FROM user WHERE ID = %s", (user_id,))
+                conn.commit()
+                affected = cursor.rowcount
+            except Exception as e:
+                conn.rollback()
+                print(f"[DB ERROR] deleteUserById: {e}")
+            finally:
+                cursor.close()
+                conn.close()
+            return affected
+        self.runAsync(query, callback, use_mutex=True)
+
+
 
     def close(self):
         self.pool = None

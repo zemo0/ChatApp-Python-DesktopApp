@@ -59,5 +59,44 @@ def login():
     else:
         return jsonify({"success": False, "error": "Invalid credentials"}), 401
 
+@app.route('/api/delete_user/<user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    event = threading.Event()
+    result = {"affected": None}
+
+    def callback(affected_rows):
+        result["affected"] = affected_rows
+        event.set()
+
+    dbManager.deleteUserById(user_id, callback)
+    event.wait()
+
+    if result["affected"] == 0:
+        return jsonify({'error': 'Korisnik nije pronađen.'}), 404
+    elif result["affected"] > 0:
+        return jsonify({'message': 'Korisnik obrisan.'}), 200
+    else:
+        return jsonify({'error': 'Greška pri brisanju korisnika.'}), 500
+
+@app.route('/api/update_user/<user_id>', methods=['PUT'])
+def update_user(user_id):
+    data = request.get_json()
+    event = threading.Event()
+    result = {"affected": None}
+
+    def callback(affected_rows):
+        result["affected"] = affected_rows
+        event.set()
+
+    dbManager.updateUserById(user_id, data, callback)
+    event.wait()
+
+    if result["affected"] == 0:
+        return jsonify({'error': 'Korisnik nije pronađen.'}), 404
+    elif result["affected"] > 0:
+        return jsonify({'message': 'Korisnik ažuriran.'}), 200
+    else:
+        return jsonify({'error': 'Greška pri ažuriranju korisnika.'}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)

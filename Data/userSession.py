@@ -14,7 +14,7 @@ class UserSession:
     def _init_session(self):
         self.user_id = None
         self.username = None
-        self.session_dir = os.path.join(os.path.dirname(__file__), "Helpers")
+        self.session_dir = os.path.join(os.path.dirname(__file__), "Helpers/SessionData")
         os.makedirs(self.session_dir, exist_ok=True)
         self.session_file = os.path.join(self.session_dir, f"session_{os.getpid()}.bin")
         self._load_session_from_file()
