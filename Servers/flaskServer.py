@@ -98,5 +98,50 @@ def update_user(user_id):
     else:
         return jsonify({'error': 'Greška pri ažuriranju korisnika.'}), 500
 
+@app.route('/api/update_message/<message_id>', methods=['PUT'])
+def update_message(message_id):
+    data = request.get_json()
+    new_content = data.get("content")
+
+    if not new_content:
+        return jsonify({"error": "Sadržaj ne može biti prazan."}), 400
+
+    event = threading.Event()
+    result = {"affected": None}
+
+    def callback(affected_rows):
+        result["affected"] = affected_rows
+        event.set()
+
+    dbManager.updateMessageById(message_id, new_content, callback)
+    event.wait()
+
+    if result["affected"] == 0:
+        return jsonify({"error": "Poruka nije pronađena."}), 404
+    elif result["affected"] > 0:
+        return jsonify({"message": "Poruka ažurirana."}), 200
+    else:
+        return jsonify({"error": "Greška pri ažuriranju poruke."}), 500
+
+
+@app.route('/api/delete_message/<message_id>', methods=['DELETE'])
+def delete_message(message_id):
+    event = threading.Event()
+    result = {"affected": None}
+
+    def callback(affected_rows):
+        result["affected"] = affected_rows
+        event.set()
+
+    dbManager.deleteMessageById(message_id, callback)
+    event.wait()
+
+    if result["affected"] == 0:
+        return jsonify({"error": "Poruka nije pronađena."}), 404
+    elif result["affected"] > 0:
+        return jsonify({"message": "Poruka obrisana."}), 200
+    else:
+        return jsonify({"error": "Greška pri brisanju poruke."}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)

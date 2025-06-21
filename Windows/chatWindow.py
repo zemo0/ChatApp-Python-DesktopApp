@@ -7,7 +7,7 @@ from datetime import datetime
 import requests
 from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt, QTimer, QMetaObject, Q_ARG, pyqtSlot, QUrl
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QDesktopServices, QAction
-from PyQt6.QtWidgets import QMainWindow, QFileDialog
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QInputDialog
 from PyQt6 import uic
 from Data import database
 from Data.Helpers import cryptoFunctions
@@ -43,6 +43,7 @@ class ChatWindow(QMainWindow):
         self.openGroup.triggered.connect(self.openNewGroup)
         self.downloadConversation.triggered.connect(self.downloadConversationXML)
         self.openSettings.triggered.connect(self.openSettingsDialog)
+        self.chatView.doubleClicked.connect(self.onMessageDoubleClicked)
 
     ####################################
     ### TCP za poruke, UDP za status ###
@@ -191,6 +192,7 @@ class ChatWindow(QMainWindow):
         if messages is not None:
             self.chatModel.clear()
             for message in messages:
+                message_id = message.getId()
                 userId = message.getSenderId()
                 timestamp = message.getTimestamp()
                 content = message.getContent()
@@ -198,9 +200,8 @@ class ChatWindow(QMainWindow):
                 attachment_name = message.getAttachmentName()
                 def handleUsername(username, ts=timestamp, text=content, att=attachment, att_name=attachment_name):
                     formatted_text = f"{username}   {ts}\n{text}\n"
-
                     item = QStandardItem(formatted_text)
-
+                    item.setData(message_id, Qt.ItemDataRole.UserRole)
                     if att and att_name:
                         os.makedirs("downloads", exist_ok=True)
                         save_path = os.path.join("downloads", att_name)
@@ -379,6 +380,66 @@ class ChatWindow(QMainWindow):
         self.adminWindow = AdminWindow()
         self.adminWindow.show()
 
+    def onMessageDoubleClicked(self, index: QModelIndex):
+        item = self.chatModel.itemFromIndex(index)
+        message_id = item.data(Qt.ItemDataRole.UserRole)
+
+        parts = item.text().split("\n")
+        if len(parts) < 2:
+            return
+
+        original_text = parts[1].strip()
+
+        new_text, ok = QInputDialog.getText(
+            self, "Uredi poruku", "Nova verzija poruke:", text=original_text
+        )
+
+        if not ok:
+            return
+
+        new_text = new_text.strip()
+        print(f"Msg id to refactor is {message_id}")
+        if new_text == "":
+            print("🗑️ Brisanje poruke...")
+            try:
+                response = requests.delete(f"http://localhost:5000/api/delete_message/{message_id}")
+                if response.status_code == 200:
+                    print("✅ Poruka obrisana.")
+                else:
+                    print(f"❌ Greška pri brisanju: {response.text}")
+            except Exception as e:
+                print(f"❌ Exception DELETE: {e}")
+        elif new_text != original_text:
+            print("✏️ Ažuriranje poruke...")
+            try:
+                response = requests.put(
+                    f"http://localhost:5000/api/update_message/{message_id}",
+                    json={"content": new_text}
+                )
+                if response.status_code == 200:
+                    print("✅ Poruka ažurirana.")
+                else:
+                    print(f"❌ Greška pri ažuriranju: {response.text}")
+            except Exception as e:
+                print(f"❌ Exception PUT: {e}")
+        else:
+            print("ℹ️ Nema promjene u sadržaju.")
+            return
+
+        # ✔ Odgodi reload chata za 500ms
+        QTimer.singleShot(500, lambda: QMetaObject.invokeMethod(
+            self, "reloadChat", Qt.ConnectionType.QueuedConnection
+        ))
+
+    @pyqtSlot()
+    def reloadChat(self):
+        selection, selectionId = self.getSelectedContact()
+        print(f"seleciton is {selection} and id is {selectionId}")
+        if self.dbManager.isGroup(selectionId):
+            self.loadGroupChat(selectionId)
+        else:
+            print(f"The currently selected contact is {selection}")
+            self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), selectionId)
 
     def closeEvent(self, event):
         self.notifyServerOfflineUDP()

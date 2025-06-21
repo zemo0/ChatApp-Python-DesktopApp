@@ -484,6 +484,43 @@ class DatabaseManager(QObject):
             return affected
         self.runAsync(query, callback, use_mutex=True)
 
+    def updateMessageById(self, message_id, new_content, callback=None):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            affected = -1
+            try:
+                sql = "UPDATE message SET content = %s WHERE ID = %s"
+                cursor.execute(sql, (new_content, message_id))
+                conn.commit()
+                affected = cursor.rowcount
+            except Exception as e:
+                conn.rollback()
+                print(f"[DB ERROR] updateMessageById: {e}")
+            finally:
+                cursor.close()
+                conn.close()
+            return affected
+        self.runAsync(query, callback, use_mutex=True)
+
+
+    def deleteMessageById(self, message_id, callback=None):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            affected = -1
+            try:
+                cursor.execute("DELETE FROM message WHERE ID = %s", (message_id,))
+                conn.commit()
+                affected = cursor.rowcount
+            except Exception as e:
+                conn.rollback()
+                print(f"[DB ERROR] deleteMessageById: {e}")
+            finally:
+                cursor.close()
+                conn.close()
+            return affected
+        self.runAsync(query, callback, use_mutex=True)
 
 
     def close(self):

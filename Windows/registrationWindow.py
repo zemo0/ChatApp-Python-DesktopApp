@@ -1,8 +1,34 @@
+import requests
 from PyQt6.QtWidgets import QMainWindow, QLabel
 from PyQt6 import QtWidgets, uic
+
+import config
 from Data import database
 from Data.Helpers import cryptoFunctions
 import re
+
+
+def isValidMail(mail):
+    url = "https://neutrinoapi.net/email-verify"
+    data = {
+        "user-id": config.NEUTRINO_API_USER_ID,
+        "api-key": config.NEUTRINO_API_KEY,
+        "email": mail
+    }
+
+    try:
+        response = requests.post(url, data=data, timeout=5)
+        if response.status_code == 200:
+            result = response.json()
+            print(f"call proso, rezultat je {result}")
+            return result.get("valid", False)
+        else:
+            print(f"res los response: {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"rest call probo {e}")
+        return False
+
 
 class RegistrationWindow(QMainWindow):
     def __init__(self):
@@ -39,6 +65,10 @@ class RegistrationWindow(QMainWindow):
                 self.infoLabel.setText("Lozinka nije dobra, mora imati barem 8 znakova, 1 broj i 1 specijalan znak")
                 print("Lozinka nije validna.")
                 return
+            elif not isValidMail(emailInput):
+                self.infoLabel.setText("Vaš mail nije validan, unesite neki drugi")
+                print("Mail nije validan.")
+                return
             else:
                 self.infoLabel.setText("")
 
@@ -73,3 +103,5 @@ class RegistrationWindow(QMainWindow):
         if re.match(pattern, password) and len(password) >= 8 and password == confirmPassword:
             return True
         return False
+
+
