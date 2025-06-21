@@ -2,17 +2,18 @@ import base64
 import json
 import os
 import socket
+import subprocess
 import threading
 from datetime import datetime
 import requests
 from PyQt6.QtCore import QModelIndex, pyqtSignal, Qt, QTimer, QMetaObject, Q_ARG, pyqtSlot, QUrl
 from PyQt6.QtGui import QStandardItemModel, QStandardItem, QDesktopServices, QAction
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QInputDialog
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QInputDialog, QMessageBox
 from PyQt6 import uic
 from Data import database
 from Data.Helpers import cryptoFunctions, jsonLogger
 from Data.userSession import UserSession
-from Data.Helpers import XMLoutput
+from Data.Helpers import XMLBlacklist
 from Windows.adminWindow import AdminWindow
 
 class ChatWindow(QMainWindow):
@@ -41,7 +42,6 @@ class ChatWindow(QMainWindow):
         self.pushButton.clicked.connect(self.sendMessage)
         self.searchContacts.textChanged.connect(self.searchForUsers)
         self.openGroup.triggered.connect(self.openNewGroup)
-        self.downloadConversation.triggered.connect(self.downloadConversationXML)
         self.openSettings.triggered.connect(self.openSettingsDialog)
         self.chatView.doubleClicked.connect(self.onMessageDoubleClicked)
 
@@ -147,7 +147,6 @@ class ChatWindow(QMainWindow):
 
     @pyqtSlot()
     def loadContacts(self):
-        print("Try to load the messages on startup")
         currentUserId = self.loginSession.getCurrentId()
         print(f"[DEBUG] Current user ID: {currentUserId}")
         self.dbManager.getContacts(currentUserId, callback=self.fillContactView)
@@ -222,6 +221,25 @@ class ChatWindow(QMainWindow):
         receiverUsername, idReceiver = self.getSelectedContact()
         timestamp = datetime.now()
 
+        script_path = os.path.abspath(os.path.join("Data", "Helpers", "checkBlacklistedWordsProcess.py"))
+        print("Pozovi blacklist za provjeru")
+        command = f'python "{script_path}" "{message}"'
+
+        check = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+
+        print("STDOUT:", check.stdout)
+        print("STDERR:", check.stderr)
+        print("RETURN CODE:", check.returncode)
+        print(f"Cekamo rezultat, return code je {check.returncode}")
+        if check.returncode != 0:
+            QMessageBox.warning(self, "Upozorenje", "Poruka sadrži nedozvoljene riječi i nije poslana.")
+            return
+        print("Poruka nema blacklistanih rijeci, idi dalje")
         attachment_data = None
         attachment_name = None
         print("Unutar send messagea sam")
@@ -285,38 +303,7 @@ class ChatWindow(QMainWindow):
             contact_id = item.data(Qt.ItemDataRole.UserRole)
             print(f"The contact id is {contact_id}")
             return item.text(), contact_id
-        return None  # No selection
-
-    def downloadConversationXML(self):
-        selection, selectionId = self.getSelectedContact()
-        if self.dbManager.isGroup(selectionId):
-            self.dbManager.getGroupMessages(selectionId, callback=self.onMessagesFetched)
-        else:
-            self.dbManager.getChatMessages(
-                self.loginSession.getCurrentId(),
-                selectionId,
-                callback=self.onMessagesFetched
-            )
-
-    def onMessagesFetched(self, messages):
-        self.downloadMessagesInXML(messages)
-        print(f"The messages are {messages}")
-
-    def downloadMessagesInXML(self, listOfMessages):
-        formattedMessages = []
-        remaining = len(listOfMessages)
-
-        def onSingleMessageFormatted(msg_dict):
-            nonlocal remaining
-            formattedMessages.append(msg_dict)
-            remaining -= 1
-            print(f"Remaining je {remaining}")
-            if remaining == 0:
-                XMLoutput.save_chat_to_xml(formattedMessages)
-
-        for message in listOfMessages:
-            self.message_to_dict(message, callback=onSingleMessageFormatted)
-
+        return None
 
     def message_to_dict(self, messageObject, callback):
         def onUsernameReceived(username):
@@ -401,15 +388,14 @@ class ChatWindow(QMainWindow):
         new_text = new_text.strip()
         print(f"Msg id to refactor is {message_id}")
         if new_text == "":
-            print("🗑️ Brisanje poruke...")
             try:
                 response = requests.delete(f"http://localhost:5000/api/delete_message/{message_id}")
                 if response.status_code == 200:
-                    print("✅ Poruka obrisana.")
+                    print("obirsano")
                 else:
-                    print(f"❌ Greška pri brisanju: {response.text}")
+                    print(f" Greška : {response.text}")
             except Exception as e:
-                print(f"❌ Exception DELETE: {e}")
+                print(f"exception: {e}")
         elif new_text != original_text:
             print("✏️ Ažuriranje poruke...")
             try:
@@ -418,16 +404,15 @@ class ChatWindow(QMainWindow):
                     json={"content": new_text}
                 )
                 if response.status_code == 200:
-                    print("✅ Poruka ažurirana.")
+                    print("editano")
                 else:
-                    print(f"❌ Greška pri ažuriranju: {response.text}")
+                    print(f"Greška: {response.text}")
             except Exception as e:
-                print(f"❌ Exception PUT: {e}")
+                print(f" {e}")
         else:
-            print("ℹ️ Nema promjene u sadržaju.")
+            print("poruka ostala ista")
             return
 
-        # ✔ Odgodi reload chata za 500ms
         QTimer.singleShot(500, lambda: QMetaObject.invokeMethod(
             self, "reloadChat", Qt.ConnectionType.QueuedConnection
         ))

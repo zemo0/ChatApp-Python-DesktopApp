@@ -25,7 +25,6 @@ class Main(QMainWindow):
         self.chatWindow.openSettingsSignal.connect(self.openSettingsDialog)
 
     def showRegistration(self):
-        print("RegistrationScreen link clicked")
         self.registrationWindow.show()
         self.loginWindow.hide()
 
@@ -51,7 +50,6 @@ class Main(QMainWindow):
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
-        # Dozvoli normalan prekid programa (Ctrl+C)
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
     print("Neočekivana greška u aplikaciji:")

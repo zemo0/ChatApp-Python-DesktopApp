@@ -16,5 +16,11 @@
         "username": "Connection pool initialized successfully!",
         "action": "INFO",
         "timestamp": "2025-06-21T19:57:37.743722"
+    },
+    {
+        "id": 4,
+        "username": "admin",
+        "action": "Poruka poslana",
+        "timestamp": "2025-06-21T21:08:44.710215"
     }
 ]

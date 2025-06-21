@@ -12,7 +12,6 @@ class LoginWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi("UI/loginScreen.ui", self)
-        print("The UI screen is loaded")
 
         #spoji UI sa funkcijama
         self.registrationWindow = RegistrationWindow()

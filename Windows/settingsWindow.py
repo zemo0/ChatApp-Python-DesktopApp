@@ -13,11 +13,11 @@ def read_font_size():
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_READ)
         value, _ = winreg.QueryValueEx(key, REG_NAME)
         winreg.CloseKey(key)
-        return int(value)  # Convert from string if needed
+        return int(value)
     except FileNotFoundError:
-        return 12  # Default font size
+        return 12
     except Exception as e:
-        print(f"Error reading registry: {e}")
+        print(f"Greška s registrom: {e}")
         return 12
 
 
@@ -27,7 +27,7 @@ def write_font_size(font_size):
         winreg.SetValueEx(key, REG_NAME, 0, winreg.REG_SZ, str(font_size))
         winreg.CloseKey(key)
     except Exception as e:
-        print(f"Error writing registry: {e}")
+        print(f"registar error: {e}")
 
 
 class SettingsWindow(QDialog):
@@ -57,8 +57,6 @@ class SettingsWindow(QDialog):
         self.y_spinbox = QSpinBox(self)
         self.y_spinbox.setRange(0, 1080)
         self.y_spinbox.setValue(100)
-
-        # Layout setup
         layout = QVBoxLayout()
 
         layout.addWidget(QLabel("Theme:"))
@@ -119,7 +117,6 @@ class SettingsWindow(QDialog):
             self.chatWindow.setStyleSheet("background-color: #2e2e2e; color: white;")
             self.groupWindow.setStyleSheet("background-color: #2e2e2e; color: white;")
         else:
-            print("try to set stylesheet")
             self.setStyleSheet("background-color: white; color: black;")
             self.chatWindow.setStyleSheet("background-color: white; color: black;")
             self.groupWindow.setStyleSheet("background-color: white; color: black;")
@@ -146,7 +143,6 @@ class SettingsWindow(QDialog):
 
     def save_settings(self):
         for section in self.config.sections():
-            print(f"[{section}]")
             for key, value in self.config.items(section):
                 print(f"{key} = {value}")
 
@@ -159,5 +155,4 @@ class SettingsWindow(QDialog):
 
         with open(INI_PATH, 'w') as configfile:
             self.config.write(configfile)
-        print("settings saved to file")
 

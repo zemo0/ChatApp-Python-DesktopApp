@@ -36,7 +36,6 @@ class RegistrationWindow(QMainWindow):
         uic.loadUi("UI/registrationScreen.ui", self)
 
         #provjera lozinke, postoji li vec username
-        print("The UI screen is loaded")
         self.infoLabel = self.findChild(QLabel, "infoLabel")
         self.infoLabel.setText("")
         self.infoLabel.setStyleSheet("color: red;")

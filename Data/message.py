@@ -41,4 +41,4 @@ class Message:
         if self._attachment_name:
             print(f"Attachment: {self._attachment_name} ({len(self._attachment)} bytes)")
         else:
-            print("Attachment: None")
+            print("Attachment: nema")

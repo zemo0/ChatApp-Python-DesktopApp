@@ -34,7 +34,7 @@ class MessageHandler(socketserver.BaseRequestHandler):
                         msg = json.loads(line)
                         self.processMessage(msg)
                     except json.JSONDecodeError as e:
-                        print(f"[JSON ERROR] {e} // line: {line[:80]}")
+                        print(f"[JSON ERROR] {e}")
 
 
         except ConnectionResetError:

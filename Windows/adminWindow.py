@@ -1,14 +1,15 @@
 import requests
 from PyQt6.QtCore import QMetaObject, Qt, Q_ARG, pyqtSlot
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QHeaderView, \
-    QDialog, QInputDialog, QLabel, QMessageBox
+    QDialog, QInputDialog, QLabel, QMessageBox, QListWidget, QGroupBox
 from Data import database
 from fpdf import FPDF
 from datetime import datetime
 import os
 import urllib.request
 
-from Data.Helpers import jsonLogger
+from Data.Helpers import jsonLogger, XMLBlacklist
+from Data.Helpers.XMLBlacklist import load_blacklist
 
 
 class AdminWindow(QDialog):
@@ -41,9 +42,38 @@ class AdminWindow(QDialog):
         self.btnReport.clicked.connect(self.generateReportForAllUsers)
 
         layout.addWidget(self.table)
+
+        blacklist_group = QGroupBox("Blacklistane riječi")
+        blacklist_layout = QVBoxLayout()
+
+        words = XMLBlacklist.load_blacklist()
+
+        self.blacklist_list = QListWidget()
+        print(f"[DEBUG] Blacklist loaded: {words}")
+        for w in words:
+            print(f"→ {w}")
+        self.blacklist_list.addItems(words)
+        blacklist_layout.addWidget(self.blacklist_list)
+
+        add_btn = QPushButton("Dodaj riječ")
+        remove_btn = QPushButton("Ukloni označeno")
+        update_btn = QPushButton("Uredi označeno")
+
+        add_btn.clicked.connect(self.addWordToBlacklist)
+        remove_btn.clicked.connect(self.removeWordFromBlacklist)
+        update_btn.clicked.connect(self.updateWordInBlacklist)
+
+        btns_layout = QHBoxLayout()
+        btns_layout.addWidget(add_btn)
+        btns_layout.addWidget(remove_btn)
+        btns_layout.addWidget(update_btn)
+
+        blacklist_layout.addLayout(btns_layout)
+        blacklist_group.setLayout(blacklist_layout)
+        layout.addWidget(blacklist_group)
+
         self.setLayout(layout)
         self.loadUsers()
-
     def loadUsers(self):
         self.dbManager.getAllUsersFullInfo(callback=self.populateTable)
 
@@ -206,3 +236,24 @@ class AdminWindow(QDialog):
 
         pdf.output(output_path)
         QMessageBox.information(self, "Uspjeh", f"PDF je generiran:\n{filename}")
+
+    def addWordToBlacklist(self):
+        word, ok = QInputDialog.getText(self, "Dodaj riječ", "Unesi novu riječ:")
+        if ok and word:
+            XMLBlacklist.add_word_to_blacklist(word)
+            self.blacklist_list.addItem(word)
+
+    def removeWordFromBlacklist(self):
+        selected_items = self.blacklist_list.selectedItems()
+        for item in selected_items:
+            XMLBlacklist.remove_word_from_blacklist(item.text())
+            self.blacklist_list.takeItem(self.blacklist_list.row(item))
+
+    def updateWordInBlacklist(self):
+        selected_items = self.blacklist_list.selectedItems()
+        if selected_items:
+            old_word = selected_items[0].text()
+            new_word, ok = QInputDialog.getText(self, "Uredi riječ", "Nova vrijednost:", text=old_word)
+            if ok and new_word and new_word != old_word:
+                XMLBlacklist.update_word_in_blacklist(old_word, new_word)
+                selected_items[0].setText(new_word)

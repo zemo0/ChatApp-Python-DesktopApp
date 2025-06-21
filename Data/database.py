@@ -21,8 +21,6 @@ class DBTask(QRunnable):
     def run(self):
         now = datetime.datetime.now()
         timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-        print(f"[{timestamp}] [DBTask] ID Threada: {threading.get_ident()} | Ime: {threading.current_thread().name}\n")
-
         result = None
         if self.mutex:
             self.mutex.lock()
@@ -44,7 +42,6 @@ class DatabaseManager(QObject):
             raise Exception("Use DatabaseManager.instance()")
 
         try:
-            print("Creating database connection pool...")
             self.pool = mysql.connector.pooling.MySQLConnectionPool(
                 pool_name="mypool",
                 pool_size=4,
@@ -54,9 +51,8 @@ class DatabaseManager(QObject):
                 password="root",
                 database="pythonchatapp"
             )
-            print("Connection pool created successfully!")
         except mysql.connector.Error as err:
-            print(f"Database connection error: {err}")
+            print(f"DB konekcija propala: {err}")
             sys.exit(1)
 
         self.mutex = QMutex()
@@ -524,4 +520,4 @@ class DatabaseManager(QObject):
 
     def close(self):
         self.pool = None
-        print("Connection pool cleared.")
+        print("Connection pool maknut")
