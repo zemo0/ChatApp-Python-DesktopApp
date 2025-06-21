@@ -5,7 +5,7 @@ import sys
 from Data.user import User
 from Data.message import Message
 from Data.chat_group import Chat_group
-from Data.Helpers import jsonLogger
+from Data.Helpers import jsonLogger, cryptoFunctions
 import threading
 import datetime
 sys.stdout.reconfigure(encoding='utf-8')
@@ -88,10 +88,20 @@ class DatabaseManager(QObject):
                 cursor.execute("SELECT * FROM user")
                 result = cursor.fetchall()
                 if result:
+                    decrypted_result = []
+                    for row in result:
+                        decrypted_row = list(row)
+                        decrypted_row[1] = cryptoFunctions.decryptAES(row[1])  # name
+                        decrypted_row[2] = cryptoFunctions.decryptAES(row[2])  # surname
+                        decrypted_row[4] = cryptoFunctions.decryptAES(row[4])  # email
+                        decrypted_row[5] = cryptoFunctions.decryptAES(row[5])  # username
+                        decrypted_row[7] = cryptoFunctions.decryptAES(row[7])  # role
+                        decrypted_result.append(tuple(decrypted_row))
+
                     if var == "nameAndPassword":
-                        return [User(*row).getNameAndPassword() for row in result]
+                        return [User(*row).getNameAndPassword() for row in decrypted_result]
                     else:
-                        return [User(*row).getUsername() for row in result]
+                        return [User(*row).getUsername() for row in decrypted_result]
                 return None
             finally:
                 cursor.close()
@@ -103,7 +113,8 @@ class DatabaseManager(QObject):
             conn = self.get_connection()
             cursor = conn.cursor()
             try:
-                cursor.execute("SELECT ID FROM user WHERE username = %s", (username,))
+                enc_username = cryptoFunctions.encryptAES(username)
+                cursor.execute("SELECT ID FROM user WHERE username = %s", (enc_username,))
                 result = cursor.fetchone()
                 return result[0] if result else None
             finally:
@@ -118,11 +129,14 @@ class DatabaseManager(QObject):
             try:
                 cursor.execute("SELECT username FROM user WHERE id = %s", (id,))
                 result = cursor.fetchone()
-                return result[0] if result else None
+                if result:
+                    return cryptoFunctions.decryptAES(result[0])
+                return None
             finally:
                 cursor.close()
                 conn.close()
         self.runAsync(query, callback)
+
 
     def insertNewUser(self, ID, name, surname, dateOfBirth, email, username, password, role, callback=None):
         def query():
@@ -147,7 +161,7 @@ class DatabaseManager(QObject):
             try:
                 cursor.execute("SELECT u.username, u.ID FROM user u WHERE u.ID != %s", (currentUserId,))
                 result = cursor.fetchall()
-                return [(row[0], row[1]) for row in result] if result else None
+                return [(cryptoFunctions.decryptAES(row[0]), row[1]) for row in result] if result else None
             finally:
                 cursor.close()
                 conn.close()
@@ -171,7 +185,14 @@ class DatabaseManager(QObject):
                 """, (currentUserId,))
                 result = cursor.fetchall()
                 print(f"Rezultat getallcontacts je {result}")
-                return [(row[0], row[1]) for row in result] if result else None
+                final_result = []
+                for row in result:
+                    try:
+                        decrypted = cryptoFunctions.decryptAES(row[0])
+                    except:
+                        decrypted = row[0]  # for group names (not encrypted)
+                    final_result.append((decrypted, row[1]))
+                return final_result if result else None
             finally:
                 cursor.close()
                 conn.close()
@@ -197,11 +218,22 @@ class DatabaseManager(QObject):
                     ) AS contacts;
                 """, (userId, userId, userId, userId))
                 result = cursor.fetchall()
-                return [(row[0], row[1]) for row in result] if result else None
+
+                final_result = []
+                for name, contact_id in result:
+                    try:
+                        decrypted_name = cryptoFunctions.decryptAES(name)
+                    except Exception:
+                        decrypted_name = name
+                    final_result.append((decrypted_name, contact_id))
+
+                return final_result if final_result else None
+
             finally:
                 cursor.close()
                 conn.close()
         self.runAsync(query, callback)
+
 
     def getChatMessages(self, currentUserId, receiverId, callback):
         def query():
@@ -344,7 +376,7 @@ class DatabaseManager(QObject):
             try:
                 cursor.execute("SELECT role FROM user WHERE ID = %s", (user_id,))
                 result = cursor.fetchone()
-                return result[0] if result else None
+                return cryptoFunctions.decryptAES(result[0]) if result else None
             finally:
                 cursor.close()
                 conn.close()
@@ -356,20 +388,20 @@ class DatabaseManager(QObject):
             cursor = conn.cursor()
             try:
                 cursor.execute("""
-                    SELECT ID, name, surname, dateOfBirth, email, username, password, role
-                    FROM user
-                """)
+                SELECT ID, name, surname, dateOfBirth, email, username, password, role
+                FROM user
+            """)
                 result = cursor.fetchall()
                 return [
                     {
                         "ID": row[0],
-                        "name": row[1],
-                        "surname": row[2],
+                        "name": cryptoFunctions.decryptAES(row[1]),
+                        "surname": cryptoFunctions.decryptAES(row[2]),
                         "dateOfBirth": row[3],
-                        "email": row[4],
-                        "username": row[5],
+                        "email": cryptoFunctions.decryptAES(row[4]),
+                        "username": cryptoFunctions.decryptAES(row[5]),
                         "password": row[6],
-                        "role": row[7]
+                        "role": cryptoFunctions.decryptAES(row[7])
                     }
                     for row in result
                 ] if result else None
@@ -398,7 +430,15 @@ class DatabaseManager(QObject):
             affected = -1
             try:
                 fields = ['name', 'surname', 'dateOfBirth', 'email', 'username', 'password', 'role']
-                values = [data.get(field) for field in fields]
+                encrypted_values = [
+                    cryptoFunctions.encryptAES(data.get('name')),
+                    cryptoFunctions.encryptAES(data.get('surname')),
+                    data.get('dateOfBirth'),
+                    cryptoFunctions.encryptAES(data.get('email')),
+                    cryptoFunctions.encryptAES(data.get('username')),
+                    data.get('password'),
+                    cryptoFunctions.encryptAES(data.get('role'))
+                ]
                 sql = """
                     UPDATE user SET
                         name = %s,
@@ -410,7 +450,7 @@ class DatabaseManager(QObject):
                         role = %s
                     WHERE ID = %s
                 """
-                cursor.execute(sql, (*values, user_id))
+                cursor.execute(sql, (*encrypted_values, user_id))
                 conn.commit()
                 affected = cursor.rowcount
             except Exception as e:

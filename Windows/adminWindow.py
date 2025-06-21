@@ -2,8 +2,11 @@ import requests
 from PyQt6.QtCore import QMetaObject, Qt, Q_ARG, pyqtSlot
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QHeaderView, \
     QDialog, QInputDialog, QLabel, QMessageBox
-
 from Data import database
+from fpdf import FPDF
+from datetime import datetime
+import os
+import urllib.request
 
 class AdminWindow(QDialog):
     def __init__(self):
@@ -23,16 +26,16 @@ class AdminWindow(QDialog):
         btnLayout.addWidget(self.btnReport)
         layout.addLayout(btnLayout)
 
-        self.btnEdit.clicked.connect(self.editSelectedUser)
-        self.btnDelete.clicked.connect(self.deleteSelectedUser)
-        self.btnReport.clicked.connect(self.generateReportForSelectedUser)
-
         self.table = QTableWidget()
         self.table.setColumnCount(9)
         self.table.setHorizontalHeaderLabels([
             "ID", "Ime", "Prezime", "Datum rođenja", "Email", "Korisničko ime",
             "Lozinka", "Uloga", "Broj poruka"
         ])
+
+        self.btnEdit.clicked.connect(self.editSelectedUser)
+        self.btnDelete.clicked.connect(self.deleteSelectedUser)
+        self.btnReport.clicked.connect(self.generateReportForAllUsers)
 
         layout.addWidget(self.table)
         self.setLayout(layout)
@@ -160,7 +163,42 @@ class AdminWindow(QDialog):
             except Exception as e:
                 QMessageBox.critical(self, "Greška", f"Greška pri spajanju na server:\n{str(e)}")
 
-    def generateReportForSelectedUser(self):
-        user_id = self.getSelectedUserId()
-        if user_id:
-            print(f"Generiraj PDF izvještaj za korisnika {user_id}")
+    def generateReportForAllUsers(self):
+        row_count = self.table.rowCount()
+        if row_count == 0:
+            QMessageBox.warning(self, "Upozorenje", "Nema korisnika za izvještaj.")
+            return
+
+        font_filename = "NotoSans-Regular.ttf"
+
+        font_path = os.path.join(os.getcwd(), font_filename)
+
+        filename = f"grupni_izvjestaj_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        output_path = os.path.join(os.getcwd(), filename)
+
+        pdf = FPDF()
+        pdf.add_font("Noto", "", font_path, uni=True)
+        pdf.set_font("Noto", "", 12)
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.add_page()
+        pdf.cell(200, 10, txt="Izvještaj korisnika", ln=True, align="C")
+        pdf.ln(10)
+
+        headers = [
+            "ID", "Ime", "Prezime", "Datum rođenja", "Email",
+            "Korisničko ime", "Lozinka", "Uloga", "Broj poruka"
+        ]
+
+        for row in range(row_count):
+            for col, header in enumerate(headers):
+                item = self.table.item(row, col)
+                value = item.text() if item else ""
+                pdf.cell(200, 10, txt=f"{header}: {value}", ln=True)
+            y = pdf.get_y()
+            pdf.set_draw_color(0, 0, 0)
+            pdf.set_line_width(0.3)
+            pdf.line(10, y, 200, y)
+            pdf.ln(10)
+
+        pdf.output(output_path)
+        QMessageBox.information(self, "Uspjeh", f"PDF je generiran:\n{filename}")

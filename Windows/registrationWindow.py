@@ -44,12 +44,26 @@ class RegistrationWindow(QMainWindow):
 
             storedId = cryptoFunctions.prepId(usernameInput)
             passwordHash = cryptoFunctions.encryptThenHash(passwordInput, usernameInput)
+
+            encryptedName = cryptoFunctions.encryptAES(nameInput)
+            encryptedSurname = cryptoFunctions.encryptAES(surnameInput)
+            encryptedDate = cryptoFunctions.encryptAES(dateInput)
+            encryptedEmail = cryptoFunctions.encryptAES(emailInput)
+            encryptedUsername = cryptoFunctions.encryptAES(usernameInput)
+            encryptedRole = cryptoFunctions.encryptAES(roleInput)
             def onUserInserted(_):
                 print("Registracija korisnika je uspješna!")
 
             self.dbManager.insertNewUser(
-                storedId, nameInput, surnameInput, dateInput, emailInput,
-                usernameInput, passwordHash, roleInput, callback=onUserInserted
+                storedId,
+                encryptedName,
+                encryptedSurname,
+                encryptedDate,
+                encryptedEmail,
+                encryptedUsername,
+                passwordHash,
+                encryptedRole,
+                callback=onUserInserted
             )
 
         self.dbManager.getUsersInfo("username", callback=onUsersFetched)

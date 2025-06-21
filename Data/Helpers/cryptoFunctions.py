@@ -56,6 +56,12 @@ def encryptAES(plain_text: str) -> str:
     encrypted_bytes = cipher.encrypt(pad(plain_text.encode(), AES.block_size))
     return base64.b64encode(encrypted_bytes).decode()
 
+def decryptAES(encrypted_b64: str) -> str:
+    encrypted_bytes = base64.b64decode(encrypted_b64)
+    cipher = AES.new(AES_KEY, AES.MODE_CBC, AES_IV)
+    decrypted = unpad(cipher.decrypt(encrypted_bytes), AES.block_size)
+    return decrypted.decode()
+
 def encryptThenHash(password: str, username: str) -> str:
     salt = username[::-1]
     pepper = random.choice(possible_peppers)
