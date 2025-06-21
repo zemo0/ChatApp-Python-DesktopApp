@@ -8,6 +8,9 @@ from datetime import datetime
 import os
 import urllib.request
 
+from Data.Helpers import jsonLogger
+
+
 class AdminWindow(QDialog):
     def __init__(self):
         super().__init__()
@@ -157,6 +160,7 @@ class AdminWindow(QDialog):
                 response = requests.delete(f"http://localhost:5000/api/delete_user/{user_id}")
                 if response.status_code == 200:
                     QMessageBox.information(self, "Uspjeh", f"Korisnik '{username}' je obrisan.")
+                    jsonLogger.delete_logs_by_username(username)
                     self.loadUsers()
                 else:
                     QMessageBox.warning(self, "Greška", "Brisanje nije uspjelo.")

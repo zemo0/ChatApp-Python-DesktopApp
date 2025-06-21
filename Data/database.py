@@ -55,7 +55,6 @@ class DatabaseManager(QObject):
                 database="pythonchatapp"
             )
             print("Connection pool created successfully!")
-            jsonLogger.write_log("Connection pool initialized successfully!", "INFO")
         except mysql.connector.Error as err:
             print(f"Database connection error: {err}")
             sys.exit(1)

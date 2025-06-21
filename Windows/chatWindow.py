@@ -10,7 +10,7 @@ from PyQt6.QtGui import QStandardItemModel, QStandardItem, QDesktopServices, QAc
 from PyQt6.QtWidgets import QMainWindow, QFileDialog, QInputDialog
 from PyQt6 import uic
 from Data import database
-from Data.Helpers import cryptoFunctions
+from Data.Helpers import cryptoFunctions, jsonLogger
 from Data.userSession import UserSession
 from Data.Helpers import XMLoutput
 from Windows.adminWindow import AdminWindow
@@ -255,6 +255,7 @@ class ChatWindow(QMainWindow):
             self.tcp_socket.sendall((json.dumps(payload) + "\n").encode("utf-8"))
             self.messageLine.clear()
             self.selectedAttachment = None
+            jsonLogger.write_log(self.loginSession.getCurrentUsername(), "Poruka poslana")
             QTimer.singleShot(1000, lambda: self.loadChatsBetweenUsers(idSender, idReceiver))
         except Exception as e:
             print(f"[SEND ERROR] {e}")
