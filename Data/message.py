@@ -32,12 +32,6 @@ class Message:
     def getAttachmentName(self): return self._attachment_name
 
     def displayMessage(self):
-        print(f"Message ID: {self._id}")
-        print(f"Sender ID: {self._senderId}")
-        print(f"Group ID: {self._groupId}")
-        print(f"Receiver ID: {self._receiverId}")
-        print(f"Timestamp: {self._timestamp}")
-        print(f"Content: {self._content}")
         if self._attachment_name:
             print(f"Attachment: {self._attachment_name} ({len(self._attachment)} bytes)")
         else:

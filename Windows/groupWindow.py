@@ -4,11 +4,11 @@ from PyQt6.QtGui import QStandardItem, QStandardItemModel
 from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QComboBox, QPushButton, QWidget, QLabel, QLineEdit, QSizePolicy, \
     QMessageBox, QInputDialog
 from Data import database
-from Data.Helpers import cryptoFunctions
+from Data.Helpers import cryptoFunctions, jsonLogger
 from Data.userSession import UserSession
 
 dbManager = database.DatabaseManager.instance() #zasto je db connector van group windowa? nije li ovo
-loginSession = UserSession()
+loginSession = UserSession.instance()
 class MultiSelectDropdown(QWidget):
     def __init__(self, chatWindow=None):
         super().__init__()
@@ -31,8 +31,9 @@ class MultiSelectDropdown(QWidget):
                 item.setCheckState(Qt.CheckState.Unchecked)
                 item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
                 self.model.appendRow(item)
+                jsonLogger.writeLog(loginSession.getCurrentUsername(), "Lista korisnika za dodati u grupi je popunjena")
         else:
-            print("No users in database")
+            print("nema korisnika u bazi")
 
 
     def eventFilter(self, obj, event):
@@ -106,7 +107,7 @@ class GroupWindow(QWidget):
         if current_username not in members:
             members.append(current_username)
 
-        print(f"[DEBUG] Insert group called with ID: {groupId}")
+        print(f"Dodaj grupu ID: {groupId}")
         def onGroupCreated(_):
             self.insertNextMember(members, groupId, 0)
         print("Pozvana insert new grupu")

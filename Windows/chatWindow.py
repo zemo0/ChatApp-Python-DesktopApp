@@ -19,7 +19,7 @@ from Windows.adminWindow import AdminWindow
 class ChatWindow(QMainWindow):
     newGroupSignal = pyqtSignal()
     openSettingsSignal = pyqtSignal()
-    loginSession = UserSession()
+    loginSession = UserSession.instance()
     def __init__(self):
         super().__init__()
         self.adminAction = None
@@ -61,22 +61,16 @@ class ChatWindow(QMainWindow):
         threading.Thread(target=self.startTCPListener, daemon=True).start()
 
     def startTCPListener(self):
-        print("Doso do start tcp")
         while True:
             try:
                 data = self.tcp_socket.recv(4096).decode('utf-8')
                 if data:
                     msg = json.loads(data)
                     if msg['type'] == 'new_message':
-                        print("Stigla nova poruka, dobio signal na chatWindow")
                         sender_id = msg['from']
-                        print("Sender id dobar")
                         my_id = self.loginSession.getCurrentId()
-                        print("my_id dobar")
                         _, selected_contact = self.getSelectedContact()
-                        print(f"pošiljatelj je {sender_id}, currentid je {my_id} i odabrani kontakt je {selected_contact}")
                         if selected_contact == sender_id:
-                            print(f"Selected contact je jednak onome koji šalje poruku, refreshaj")
                             QMetaObject.invokeMethod(
                                 self,
                                 "loadChatsBetweenUsers",
@@ -85,7 +79,7 @@ class ChatWindow(QMainWindow):
                                 Q_ARG(str, sender_id)
                             )
             except Exception as e:
-                print(f"[TCP] Error je {e}")
+                print(f"[TCP Listener] Error je {e}")
                 break
 
     def startUdpListener(self):
@@ -93,7 +87,7 @@ class ChatWindow(QMainWindow):
             listen_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             listen_socket.bind(("0.0.0.0", 0))
             self.udp_socket = listen_socket
-            print(f"[UDP] Klijent osluškuje na portu {listen_socket.getsockname()[1]}")
+            print(f"[UDP Listener] Klijent osluškuje na portu {listen_socket.getsockname()[1]}")
             self.notifyServerOnlineUDP()
             self.fetchOnlineUsersUDP()
             QMetaObject.invokeMethod(
@@ -120,7 +114,11 @@ class ChatWindow(QMainWindow):
                         "loadContacts",
                         Qt.ConnectionType.QueuedConnection
                     )
+                except socket.timeout:
+                    # nije problem, nastavi dalje slušat
+                    continue
                 except Exception as e:
+                    print(f"UDP listener baci exception: {e}")
                     continue ##ovo fixat, nije u redu tako ostavut
         threading.Thread(target=listen, daemon=True).start()
 
@@ -141,14 +139,13 @@ class ChatWindow(QMainWindow):
             data, _ = self.udp_socket.recvfrom(4096)
             user_list = data.decode().split(",") if data else []
             self.onlineUsers = set(user_list)
-            print(f"[UDP] Online korisnici: {self.onlineUsers}")
+            print(f"[UDP Listener] Online korisnici: {self.onlineUsers}")
         except Exception as e:
-            print(f"[UDP] Greška kod dohvaćanja online korisnika: {e}")
+            print(f"[UDP Listener] Greška kod dohvaćanja online korisnika: {e}")
 
     @pyqtSlot()
     def loadContacts(self):
         currentUserId = self.loginSession.getCurrentId()
-        print(f"[DEBUG] Current user ID: {currentUserId}")
         self.dbManager.getContacts(currentUserId, callback=self.fillContactView)
 
     def fillContactView(self, contacts):
@@ -168,11 +165,9 @@ class ChatWindow(QMainWindow):
 
     def onContactClicked(self, index: QModelIndex):
         selection, selectionId = self.getSelectedContact()
-        print(f"seleciton is {selection} and id is {selectionId}")
         if self.dbManager.isGroup(selectionId):
             self.loadGroupChat(selectionId)
         else:
-            print(f"The currently selected contact is {selection}")
             self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), selectionId)
 
     @pyqtSlot(str)
@@ -184,35 +179,39 @@ class ChatWindow(QMainWindow):
 
     @pyqtSlot(str, str)
     def loadChatsBetweenUsers(self, currentUserId, receiverId):
-        print("Try to load the chats between users")
         self.dbManager.instance().getChatMessages(currentUserId, receiverId, callback=self.addMessageToChat)
 
     def addMessageToChat(self, messages):
         if messages is not None:
             self.chatModel.clear()
-            for message in messages:
-                message_id = message.getId()
-                userId = message.getSenderId()
-                timestamp = message.getTimestamp()
-                content = message.getContent()
-                attachment = message.getAttachment()
-                attachment_name = message.getAttachmentName()
-                def handleUsername(username, ts=timestamp, text=content, att=attachment, att_name=attachment_name):
-                    formatted_text = f"{username}   {ts}\n{text}\n"
+            def onUsernamesFetched(user_map):
+                messages.sort(key=lambda m: m.getTimestamp())
+
+                for message in messages:
+                    message_id = message.getId()
+                    userId = message.getSenderId()
+                    timestamp = message.getTimestamp()
+                    content = message.getContent()
+                    attachment = message.getAttachment()
+                    attachment_name = message.getAttachmentName()
+                    username = user_map.get(userId, "Nepoznat")
+
+                    formatted_time = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                    formatted_text = f"{username}   {formatted_time}\n{content}\n"
+
                     item = QStandardItem(formatted_text)
                     item.setData(message_id, Qt.ItemDataRole.UserRole)
-                    if att and att_name:
+
+                    if attachment and attachment_name:
                         os.makedirs("downloads", exist_ok=True)
-                        save_path = os.path.join("downloads", att_name)
+                        save_path = os.path.join("downloads", attachment_name)
                         with open(save_path, 'wb') as f:
-                            f.write(att)
-                        formatted_text += f"[📎 {att_name}]\n"
+                            f.write(attachment)
+                        formatted_text += f"[📎 {attachment_name}]\n"
                         item.setText(formatted_text)
                         item.setData(save_path, Qt.ItemDataRole.UserRole + 1)
-
                     self.chatModel.appendRow(item)
-
-                self.dbManager.instance().getUsernameById(userId, callback=handleUsername)
+            self.dbManager.instance().getAllUsernames(callback=onUsernamesFetched)
 
     def sendMessage(self):
         message = self.messageLine.text()
@@ -231,11 +230,6 @@ class ChatWindow(QMainWindow):
             capture_output=True,
             text=True
         )
-
-        print("STDOUT:", check.stdout)
-        print("STDERR:", check.stderr)
-        print("RETURN CODE:", check.returncode)
-        print(f"Cekamo rezultat, return code je {check.returncode}")
         if check.returncode != 0:
             QMessageBox.warning(self, "Upozorenje", "Poruka sadrži nedozvoljene riječi i nije poslana.")
             return
@@ -254,7 +248,7 @@ class ChatWindow(QMainWindow):
                     attachment_name = name
                     message = message.replace(f"📎 {name}", "").strip()
             except Exception as e:
-                print(f"[ATTACHMENT ERROR] Ne mogu učitati privitak: {e}")
+                print(f"Ne mogu učitati privitak: {e}")
                 self.selectedAttachment = None
         else:
             raw_attachment_data = False
@@ -283,10 +277,9 @@ class ChatWindow(QMainWindow):
                 print("Poslan je attachment")
             self.messageLine.clear()
             self.selectedAttachment = None
-            jsonLogger.write_log(self.loginSession.getCurrentUsername(), "Poruka poslana")
-            QTimer.singleShot(1000, lambda: self.reloadChat(idReceiver))
+            QTimer.singleShot(1000, lambda: self.reloadChat())
         except Exception as e:
-            print(f"[SEND ERROR] {e}")
+            print(f"greška kod slanja poruke, {e}")
 
     def searchForUsers(self):
         self.contactsModel.clear()
@@ -307,14 +300,10 @@ class ChatWindow(QMainWindow):
                     self.contactsModel.appendRow(item)
 
     def getSelectedContact(self):
-        print("U get selected contact selection je")
         selection = self.contactsView.selectedIndexes()
-        print(f"Selection is {selection}")
         if selection:
             item = self.contactsModel.itemFromIndex(selection[0])
-            print(f"Item is {item}")
             contact_id = item.data(Qt.ItemDataRole.UserRole)
-            print(f"The contact id is {contact_id}")
             return item.text(), contact_id
         return None
 
@@ -358,7 +347,6 @@ class ChatWindow(QMainWindow):
             response = requests.get("http://localhost:5000/api/get_role", params={"user_id": user_id})
             if response.status_code == 200:
                 role = response.json().get("role")
-                print(f"Rola koju je server odgovorio je {role}")
                 self.handleRoleCheck(role)
             else:
                 print("Greška kod provjere role:", response.text)
@@ -366,58 +354,49 @@ class ChatWindow(QMainWindow):
             print("Pogreška pri spajanju na server:", e)
 
     def handleRoleCheck(self, role):
-        print(f"Zavrsio u role check, rola je {role}")
         if role == "Admin":
-            print("dodaj admin tab")
             self.adminMenu = self.menubar.addMenu("Admin")
-            print("Dodaj admin akciju")
             self.adminAction = QAction("Admin Panel", self)
             self.adminAction.triggered.connect(self.showAdminTab)
-
             self.adminMenu.addAction(self.adminAction)
 
     def showAdminTab(self):
-        print("Admin tab bi se sada otvorio...")
-        self.adminWindow = AdminWindow()
+        print("Admin tab bi se sada otvorio..")
+        self.adminWindow = AdminWindow(self)
         self.adminWindow.show()
 
     def onMessageDoubleClicked(self, index: QModelIndex):
         item = self.chatModel.itemFromIndex(index)
         message_id = item.data(Qt.ItemDataRole.UserRole)
-
         parts = item.text().split("\n")
         if len(parts) < 2:
             return
-
         original_text = parts[1].strip()
 
         new_text, ok = QInputDialog.getText(
             self, "Uredi poruku", "Nova verzija poruke:", text=original_text
         )
-
         if not ok:
             return
 
         new_text = new_text.strip()
-        print(f"Msg id to refactor is {message_id}")
         if new_text == "":
             try:
                 response = requests.delete(f"http://localhost:5000/api/delete_message/{message_id}")
                 if response.status_code == 200:
-                    print("obirsano")
+                    print("obrisana je poruka")
                 else:
                     print(f" Greška : {response.text}")
             except Exception as e:
-                print(f"exception: {e}")
+                print(f"Greška kod pristupa TCP serveru: {e}")
         elif new_text != original_text:
-            print("✏️ Ažuriranje poruke...")
             try:
                 response = requests.put(
                     f"http://localhost:5000/api/update_message/{message_id}",
                     json={"content": new_text}
                 )
                 if response.status_code == 200:
-                    print("editano")
+                    print("editana je poruka")
                 else:
                     print(f"Greška: {response.text}")
             except Exception as e:
@@ -425,17 +404,17 @@ class ChatWindow(QMainWindow):
         else:
             print("poruka ostala ista")
             return
-
         QTimer.singleShot(500, lambda: QMetaObject.invokeMethod(
             self, "reloadChat", Qt.ConnectionType.QueuedConnection
         ))
 
     @pyqtSlot()
-    def reloadChat(self, receiverId):
-        if self.dbManager.isGroup(receiverId):
-            self.loadGroupChat(receiverId)
+    def reloadChat(self):
+        selection, selectionId = self.getSelectedContact()
+        if self.dbManager.isGroup(selectionId):
+            self.loadGroupChat(selectionId)
         else:
-            self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), receiverId)
+            self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), selectionId)
 
     def closeEvent(self, event):
         self.notifyServerOfflineUDP()

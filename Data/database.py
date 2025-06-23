@@ -19,9 +19,6 @@ class DBTask(QRunnable):
 
     @pyqtSlot()
     def run(self):
-        now = datetime.datetime.now()
-        timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-        result = None
         if self.mutex:
             self.mutex.lock()
         try:
@@ -40,7 +37,6 @@ class DatabaseManager(QObject):
         super().__init__()
         if DatabaseManager._instance is not None:
             raise Exception("Use DatabaseManager.instance()")
-
         try:
             self.pool = mysql.connector.pooling.MySQLConnectionPool(
                 pool_name="mypool",
@@ -53,7 +49,6 @@ class DatabaseManager(QObject):
             )
         except mysql.connector.Error as err:
             print(f"DB konekcija propala: {err}")
-            sys.exit(1)
 
         self.mutex = QMutex()
         self.threadPool = QThreadPool()
@@ -266,7 +261,6 @@ class DatabaseManager(QObject):
 
     def insertNewChatMessage(self, ID, content, IDSender, whichID, timestamp, attachment=None, attachment_name=None, callback=None):
         def query():
-            print("Unutar query za insert msg sam")
             conn = self.get_connection()
             cursor = conn.cursor()
             try:
@@ -283,7 +277,6 @@ class DatabaseManager(QObject):
                     blob_data = Binary(attachment) if attachment is not None else None
                     attachment_name_data = attachment_name if attachment is not None else None
                     values = (ID, content, IDSender, whichID, timestamp, blob_data, attachment_name_data)
-                    print(f"Values is {values}")
                 else:
                     # Direktna poruka
                     print("Prije sendquery sam u direktnoj")
@@ -297,7 +290,6 @@ class DatabaseManager(QObject):
                     attachment_name_data = attachment_name if attachment is not None else None
                     print("query unesen, provjeri blob")
                     values = (ID, content, IDSender, whichID, timestamp, blob_data, attachment_name_data)
-                    print(f"Values is {values}")
                 cursor.execute(sendQuery, values)
                 conn.commit()
             finally:
@@ -338,6 +330,19 @@ class DatabaseManager(QObject):
                 cursor.close()
             if own_conn:
                 conn.close()
+
+    def getAllUsernames(self, callback):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT ID, username FROM user")
+                result = cursor.fetchall()
+                return {row[0]: cryptoFunctions.decryptAES(row[1]) for row in result} if result else {}
+            finally:
+                cursor.close()
+                conn.close()
+        self.runAsync(query, callback)
 
     def insertNewGroup(self, id, name, callback=None):
         def query():
@@ -454,7 +459,6 @@ class DatabaseManager(QObject):
                 affected = cursor.rowcount
             except Exception as e:
                 conn.rollback()
-                print(f"[DB ERROR] updateUserById: {e}")
             finally:
                 cursor.close()
                 conn.close()
@@ -476,7 +480,6 @@ class DatabaseManager(QObject):
                 affected = cursor.rowcount
             except Exception as e:
                 conn.rollback()
-                print(f"[DB ERROR] deleteUserById: {e}")
             finally:
                 cursor.close()
                 conn.close()
@@ -495,7 +498,6 @@ class DatabaseManager(QObject):
                 affected = cursor.rowcount
             except Exception as e:
                 conn.rollback()
-                print(f"[DB ERROR] updateMessageById: {e}")
             finally:
                 cursor.close()
                 conn.close()
@@ -514,7 +516,6 @@ class DatabaseManager(QObject):
                 affected = cursor.rowcount
             except Exception as e:
                 conn.rollback()
-                print(f"[DB ERROR] deleteMessageById: {e}")
             finally:
                 cursor.close()
                 conn.close()

@@ -3,12 +3,16 @@ import winreg
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDialog, QComboBox, QSlider, QSpinBox, QPushButton, QVBoxLayout, QLabel, QHBoxLayout
 
+from Data.Helpers import jsonLogger
+from Data.userSession import UserSession
+from Windows.groupWindow import loginSession
+
 INI_PATH = 'Data/Helpers/config.ini'
 REG_PATH = r"SOFTWARE\ChatApp"
 REG_NAME = "FontSize"
 
 
-def read_font_size():
+def readFontSize():
     try:
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_READ)
         value, _ = winreg.QueryValueEx(key, REG_NAME)
@@ -21,18 +25,20 @@ def read_font_size():
         return 12
 
 
-def write_font_size(font_size):
+def writeFontSize(font_size):
     try:
         key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, REG_PATH)
         winreg.SetValueEx(key, REG_NAME, 0, winreg.REG_SZ, str(font_size))
         winreg.CloseKey(key)
     except Exception as e:
-        print(f"registar error: {e}")
+        print(f"windows regitar greska: {e}")
 
 
 class SettingsWindow(QDialog):
+    loginSession = UserSession.instance()
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.adminWindow = None
         self.chatWindow = None
         self.groupWindow = None
         self.width = None
@@ -59,23 +65,23 @@ class SettingsWindow(QDialog):
         self.y_spinbox.setValue(100)
         layout = QVBoxLayout()
 
-        layout.addWidget(QLabel("Theme:"))
+        layout.addWidget(QLabel("Tema aplikacije:"))
         layout.addWidget(self.theme_combo)
 
-        layout.addWidget(QLabel("Font Size:"))
+        layout.addWidget(QLabel("Veličina fonta:"))
         layout.addWidget(self.font_slider)
 
-        layout.addWidget(QLabel("X Position:"))
+        layout.addWidget(QLabel("X koordinata:"))
         layout.addWidget(self.x_spinbox)
 
-        layout.addWidget(QLabel("Y Position:"))
+        layout.addWidget(QLabel("Y koordinata:"))
         layout.addWidget(self.y_spinbox)
 
         button_layout = QHBoxLayout()
-        apply_button = QPushButton("Apply", self)
-        apply_button.clicked.connect(self.apply_changes)
+        apply_button = QPushButton("Primjeni", self)
+        apply_button.clicked.connect(self.applyChanges)
         button_layout.addWidget(apply_button)
-        cancel_button = QPushButton("Cancel", self)
+        cancel_button = QPushButton("Poništi", self)
         cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(cancel_button)
 
@@ -83,23 +89,22 @@ class SettingsWindow(QDialog):
 
         self.setLayout(layout)
 
-    def apply_changes(self):
+    def applyChanges(self):
         theme = self.theme_combo.currentText()
         font_size = self.font_slider.value()
         x_pos = self.x_spinbox.value()
         y_pos = self.y_spinbox.value()
 
         self.apply_settings(theme, font_size, x_pos, y_pos)
-        print(f"The parent object is {self.parent()}")
 
         self.accept()
 
-    def load_settings(self, chatWindow, groupWindow):
+    def loadSettings(self, chatWindow, groupWindow):
         self.config = configparser.ConfigParser()
         self.config.read(INI_PATH)
 
         self.theme = self.config.get('UserPreferences', 'theme', fallback='dark')
-        self.font_size = read_font_size()
+        self.font_size = readFontSize()
 
         self.x = self.config.getint('WindowSettings', 'x_position', fallback=100)
         self.y = self.config.getint('WindowSettings', 'y_position', fallback=100)
@@ -108,10 +113,10 @@ class SettingsWindow(QDialog):
 
         self.chatWindow = chatWindow
         self.groupWindow = groupWindow
-        self.apply_user_preferences()
-        self.apply_window_settings()
+        self.applyUserSettings()
+        self.applyWindowSettings()
 
-    def apply_user_preferences(self):
+    def applyUserSettings(self):
         if self.theme == 'dark':
             self.setStyleSheet("background-color: #2e2e2e; color: white;")
             self.chatWindow.setStyleSheet("background-color: #2e2e2e; color: white;")
@@ -125,7 +130,7 @@ class SettingsWindow(QDialog):
         font.setPointSize(int(self.font_size))
         self.setFont(font)
 
-    def apply_window_settings(self):
+    def applyWindowSettings(self):
         self.setGeometry(self.x, self.y, 100, 100)
         self.chatWindow.setGeometry(self.x, self.y, self.width, self.height)
         self.groupWindow.setGeometry(self.x, self.y, 200, 200)
@@ -136,18 +141,15 @@ class SettingsWindow(QDialog):
         self.x = x
         self.y = y
 
-        self.apply_user_preferences()
-        self.apply_window_settings()
+        self.applyUserSettings()
+        self.applyWindowSettings()
 
-        self.save_settings()
+        self.saveToFile()
 
-    def save_settings(self):
-        for section in self.config.sections():
-            for key, value in self.config.items(section):
-                print(f"{key} = {value}")
-
+    def saveToFile(self):
+        jsonLogger.writeLog(self.loginSession.getCurrentUsername(), "Promjenjene postavke u aplikaciji")
         self.config.set('UserPreferences', 'theme', self.theme)
-        write_font_size(str(self.font_size))
+        writeFontSize(str(self.font_size))
         self.config.set('WindowSettings', 'x_position', str(self.x))
         self.config.set('WindowSettings', 'y_position', str(self.y))
         self.config.set('WindowSettings', 'width', str(self.width))

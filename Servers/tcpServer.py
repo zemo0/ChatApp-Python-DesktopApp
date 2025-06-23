@@ -37,26 +37,25 @@ class MessageHandler(socketserver.BaseRequestHandler):
                             print(f"Ocekivana velicina je {expected}")
                             while len(buffer) < expected:
                                 buffer += self.request.recv(4096)
-                            print(f"ocekivani blob je {buffer[:expected]}")
                             attachment_blob = buffer[:expected]
                             buffer = buffer[expected:]
                         else:
                             attachment_blob = None
                         self.processMessage(msg, attachment_blob)
                     except json.JSONDecodeError as e:
-                        print(f"[JSON ERROR] {e}")
+                        print(f"Greška s JSONom na serveru, {e}")
         except ConnectionResetError:
             pass
         finally:
             if self.user_id in connected_clients:
                 del connected_clients[self.user_id]
-                print(f"[TCP] {self.user_id} disconnected.")
+                print(f"[TCP] {self.user_id} se odspojio.")
 
     def processMessage(self, msg, attachment_blob):
         if msg['type'] == 'register':
             self.user_id = msg['user_id']
             connected_clients[self.user_id] = self.request
-            print(f"[TCP] {self.user_id} connected.")
+            print(f"[TCP] {self.user_id} se spojio.")
 
         elif msg['type'] == 'chat_message':
             ID = msg['message_id']

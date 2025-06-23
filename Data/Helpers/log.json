@@ -124,5 +124,359 @@
         "username": "admin",
         "action": "Poruka poslana",
         "timestamp": "2025-06-23T11:13:19.590769"
+    },
+    {
+        "id": 22,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:16:48.441370"
+    },
+    {
+        "id": 23,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:17:56.964441"
+    },
+    {
+        "id": 24,
+        "username": "ivan_zeman",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:18:06.550111"
+    },
+    {
+        "id": 25,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:21:00.466367"
+    },
+    {
+        "id": 26,
+        "username": "admin",
+        "action": "Promjenjene postavke u aplikaciji",
+        "timestamp": "2025-06-23T18:21:17.293449"
+    },
+    {
+        "id": 27,
+        "username": "admin",
+        "action": "Promjenjene postavke u aplikaciji",
+        "timestamp": "2025-06-23T18:21:21.529420"
+    },
+    {
+        "id": 28,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:23:19.283683"
+    },
+    {
+        "id": 29,
+        "username": "admin",
+        "action": "Korisnički podatci su ažurirani",
+        "timestamp": "2025-06-23T18:23:42.137843"
+    },
+    {
+        "id": 30,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:25:19.435055"
+    },
+    {
+        "id": 31,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:26:24.157547"
+    },
+    {
+        "id": 32,
+        "username": "admin",
+        "action": "Riječ izbrisana iz blackliste",
+        "timestamp": "2025-06-23T18:26:53.566039"
+    },
+    {
+        "id": 33,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:28:33.546932"
+    },
+    {
+        "id": 34,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:28:33.580933"
+    },
+    {
+        "id": 35,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:28:33.612979"
+    },
+    {
+        "id": 36,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:28:33.615977"
+    },
+    {
+        "id": 37,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:33:18.696185"
+    },
+    {
+        "id": 38,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:33:18.732207"
+    },
+    {
+        "id": 39,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:33:18.760739"
+    },
+    {
+        "id": 40,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:33:18.763737"
+    },
+    {
+        "id": 41,
+        "username": "ivan_zeman",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:33:39.544582"
+    },
+    {
+        "id": 42,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:33:39.578770"
+    },
+    {
+        "id": 43,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:33:39.606769"
+    },
+    {
+        "id": 44,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:33:39.609771"
+    },
+    {
+        "id": 45,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:34:32.776472"
+    },
+    {
+        "id": 46,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:34:32.811012"
+    },
+    {
+        "id": 47,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:34:32.840009"
+    },
+    {
+        "id": 48,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:34:32.844008"
+    },
+    {
+        "id": 49,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:35:12.689690"
+    },
+    {
+        "id": 50,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:35:12.743226"
+    },
+    {
+        "id": 51,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:35:12.776225"
+    },
+    {
+        "id": 52,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:35:12.779228"
+    },
+    {
+        "id": 53,
+        "username": "ivan_zeman",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:35:30.186634"
+    },
+    {
+        "id": 54,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:35:30.236995"
+    },
+    {
+        "id": 55,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:35:30.242993"
+    },
+    {
+        "id": 56,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:35:30.246003"
+    },
+    {
+        "id": 57,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:37:37.500070"
+    },
+    {
+        "id": 58,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:37:37.562065"
+    },
+    {
+        "id": 59,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:37:37.571071"
+    },
+    {
+        "id": 60,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:37:37.574049"
+    },
+    {
+        "id": 61,
+        "username": "ivan_zeman",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:37:56.345415"
+    },
+    {
+        "id": 62,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:37:56.384417"
+    },
+    {
+        "id": 63,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:37:56.413418"
+    },
+    {
+        "id": 64,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:37:56.417415"
+    },
+    {
+        "id": 65,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:39:50.163761"
+    },
+    {
+        "id": 66,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:39:50.197755"
+    },
+    {
+        "id": 67,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:39:50.226315"
+    },
+    {
+        "id": 68,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:39:50.229318"
+    },
+    {
+        "id": 69,
+        "username": "ivan_zeman",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:40:09.033793"
+    },
+    {
+        "id": 70,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:40:09.067802"
+    },
+    {
+        "id": 71,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:40:09.099798"
+    },
+    {
+        "id": 72,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:40:09.102808"
+    },
+    {
+        "id": 73,
+        "username": "admin",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:41:28.605101"
+    },
+    {
+        "id": 74,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:41:28.639108"
+    },
+    {
+        "id": 75,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:41:28.673115"
+    },
+    {
+        "id": 76,
+        "username": "admin",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:41:28.677112"
+    },
+    {
+        "id": 77,
+        "username": "ivan_zeman",
+        "action": "Uspješan login u app",
+        "timestamp": "2025-06-23T18:41:49.426746"
+    },
+    {
+        "id": 78,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:41:49.502750"
+    },
+    {
+        "id": 79,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:41:49.544293"
+    },
+    {
+        "id": 80,
+        "username": "ivan_zeman",
+        "action": "Lista korisnika za dodati u grupi je popunjena",
+        "timestamp": "2025-06-23T18:41:49.549287"
     }
 ]

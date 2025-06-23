@@ -1,63 +1,61 @@
 import os
 import pickle
-import multiprocessing
+import sys
 
 class UserSession:
     _instance = None
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(UserSession, cls).__new__(cls)
-            cls._instance._init_session()
-        return cls._instance
-
-    def _init_session(self):
+    def __init__(self):
+        if UserSession._instance is not None:
+            raise Exception("Use UserSession.instance() to get the singleton instance.")
         self.user_id = None
         self.username = None
-        self.session_dir = os.path.join(os.path.dirname(__file__), "Helpers/SessionData")
-        os.makedirs(self.session_dir, exist_ok=True)
+        self.session_dir = os.path.join(os.path.dirname(__file__), "Helpers", "SessionData")
+        #svaki proces ima vlastitu sesiju i vlastite "sessiondata"
         self.session_file = os.path.join(self.session_dir, f"session_{os.getpid()}.bin")
-        self._load_session_from_file()
+        self.loadSessionData()
+
+        UserSession._instance = self
+
+    @staticmethod
+    def instance():
+        if UserSession._instance is None:
+            UserSession()
+        return UserSession._instance
+
+    def setUserID(self, _user_id): self.user_id = _user_id
+    def setUsername(self, _username): self.username = _username
+
+    def getUserID(self): return self.user_id
+    def getUsername(self): return self.username
 
     def login(self, username, user_id):
-        self.username = username
-        self.user_id = user_id
-        self._save_session_to_file()
-        print(f"[SESSION] Logged in as {username} with ID {user_id}")
+        self.setUsername(username)
+        self.setUserID(user_id)
+        self.saveSessionData()
 
     def getCurrentId(self):
-        self._load_session_from_file()
-        if self.user_id is not None:
-            print(f"[SESSION] Current user ID: {self.user_id}")
-            return str(self.user_id)
-        else:
-            print("[SESSION] No user is logged in.")
-            return None
+        self.loadSessionData()
+        return str(self.getUserID()) if self.getUserID() is not None else None
 
     def getCurrentUsername(self):
-        self._load_session_from_file()
-        if self.username is not None:
-            print(f"[SESSION] Current username: {self.username}")
-            return str(self.username)
-        else:
-            print("[SESSION] No user is logged in.")
-            return None
+        self.loadSessionData()
+        return str(self.getUsername()) if self.getUsername() is not None else None
 
-    def _save_session_to_file(self):
+    def saveSessionData(self):
         try:
             with open(self.session_file, "wb") as f:
-                pickle.dump({"user_id": self.user_id, "username": self.username}, f)
-            print(f"[SESSION] Podaci zapisani u {self.session_file}")
+                pickle.dump({"user_id": self.getUserID(), "username": self.getUsername()}, f)
         except Exception as e:
-            print(f"[SESSION] Greška kod zapisivanja u datoteku: {e}")
+            print(f"Greška kod zapisivanja usera u datoteku: {e}")
 
-    def _load_session_from_file(self):
+    def loadSessionData(self):
         if not os.path.exists(self.session_file):
             return
         try:
             with open(self.session_file, "rb") as f:
                 data = pickle.load(f)
-                self.user_id = data.get("user_id")
-                self.username = data.get("username")
+                self.setUserID(data.get("user_id"))
+                self.setUsername(data.get("username"))
         except Exception as e:
-            print(f"[SESSION] Greška kod učitavanja iz datoteke: {e}")
+            print(f"Greška kod učitavanja iz user datoteke: {e}")

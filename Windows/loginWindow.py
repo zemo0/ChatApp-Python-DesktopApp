@@ -3,17 +3,16 @@ from PyQt6.QtWidgets import QMainWindow, QLabel
 from PyQt6 import uic
 from PyQt6.QtCore import pyqtSignal
 from Data import database
+from Data.Helpers import jsonLogger
 from Data.userSession import UserSession
 from Windows.registrationWindow import RegistrationWindow
 
 class LoginWindow(QMainWindow):
     loginSuccess = pyqtSignal()
-    loginSession = UserSession()
+    loginSession = UserSession.instance()
     def __init__(self):
         super().__init__()
         uic.loadUi("UI/loginScreen.ui", self)
-
-        #spoji UI sa funkcijama
         self.registrationWindow = RegistrationWindow()
         self.linkLabel = self.findChild(QLabel, "linkLabel") #registrationScreen link
         self.linkLabel.setText('<a href="register">linku</a>')
@@ -43,5 +42,6 @@ class LoginWindow(QMainWindow):
             print("Greška pri spajanju na server:", e)
 
     def finishLogin(self, username, userId):
+        jsonLogger.writeLog(username, "Uspješan login u app")
         self.loginSession.login(username, userId)
         self.loginSuccess.emit()

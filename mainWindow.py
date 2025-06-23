@@ -19,8 +19,10 @@ class Main(QMainWindow):
         self.registrationWindow = RegistrationWindow()
         self.chatWindow = ChatWindow()
         self.loginWindow.show()
+
         self.loginWindow.linkLabel.linkActivated.connect(self.showRegistration)
         self.loginWindow.loginSuccess.connect(self.showChatWindow)
+        self.registrationWindow.backToLogin.connect(self.showLoginWindow)
         self.chatWindow.newGroupSignal.connect(self.showAddGroupWindow)
         self.chatWindow.openSettingsSignal.connect(self.openSettingsDialog)
 
@@ -31,21 +33,23 @@ class Main(QMainWindow):
     def showChatWindow(self):
         self.chatWindow.startUdpListener()
         self.chatWindow.connectToTCPServer()
-        print("ChatScreen showing")
-        self.groupWindow = GroupWindow(chatWindow=self.chatWindow)
+        self.groupWindow = GroupWindow()
         self.settingsWindow = SettingsWindow()
         self.chatWindow.show()
         self.chatWindow.loadContacts()
-        self.settingsWindow.load_settings(self.chatWindow, self.groupWindow)
+        self.settingsWindow.loadSettings(self.chatWindow, self.groupWindow)
         self.loginWindow.hide()
         self.chatWindow.triggerAdminCheck()
 
     def showAddGroupWindow(self):
-        print("Group window is now showing")
         self.groupWindow.show()
 
     def openSettingsDialog(self):
         self.settingsWindow.show()
+
+    def showLoginWindow(self):
+        self.registrationWindow.hide()
+        self.loginWindow.show()
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):

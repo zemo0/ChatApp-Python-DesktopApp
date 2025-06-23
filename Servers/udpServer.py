@@ -48,7 +48,7 @@ def start_udp_server():
                 daemon=True
             ).start()
         except Exception as e:
-            print(f"[ERROR] {e}")
+            print(f"[UDP] greška kdo spajanja, {e}")
 
 if __name__ == "__main__":
     start_udp_server()

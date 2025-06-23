@@ -1,4 +1,5 @@
 import requests
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QMainWindow, QLabel
 from PyQt6 import QtWidgets, uic
 
@@ -8,29 +9,8 @@ from Data.Helpers import cryptoFunctions
 import re
 
 
-def isValidMail(mail):
-    url = "https://neutrinoapi.net/email-verify"
-    data = {
-        "user-id": config.NEUTRINO_API_USER_ID,
-        "api-key": config.NEUTRINO_API_KEY,
-        "email": mail
-    }
-
-    try:
-        response = requests.post(url, data=data, timeout=5)
-        if response.status_code == 200:
-            result = response.json()
-            print(f"call proso, rezultat je {result}")
-            return result.get("valid", False)
-        else:
-            print(f"res los response: {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"rest call probo {e}")
-        return False
-
-
 class RegistrationWindow(QMainWindow):
+    backToLogin = pyqtSignal()
     def __init__(self):
         super().__init__()
         uic.loadUi("UI/registrationScreen.ui", self)
@@ -40,6 +20,7 @@ class RegistrationWindow(QMainWindow):
         self.infoLabel.setText("")
         self.infoLabel.setStyleSheet("color: red;")
         self.pushButton.clicked.connect(self.onButtonClick) #registracija
+        self.navigationButton.clicked.connect(self.onGoBackToLogin)
         self.dbManager = database.DatabaseManager.instance()
 
     def onButtonClick(self):
@@ -82,7 +63,13 @@ class RegistrationWindow(QMainWindow):
             encryptedRole = cryptoFunctions.encryptAES(roleInput)
             def onUserInserted(_):
                 print("Registracija korisnika je uspješna!")
-
+                self.nameLine.clear()
+                self.surnameLine.clear()
+                self.emailLine.clear()
+                self.usernameLine.clear()
+                self.passwordLine.clear()
+                self.confirmPasswordLine.clear()
+                self.infoLabel.setText("Registracija korisnika je uspješna, sad se možete ulogirati")
             self.dbManager.insertNewUser(
                 storedId,
                 encryptedName,
@@ -103,4 +90,27 @@ class RegistrationWindow(QMainWindow):
             return True
         return False
 
+    def onGoBackToLogin(self):
+        self.backToLogin.emit()
+
+def isValidMail(mail):
+    url = "https://neutrinoapi.net/email-verify"
+    data = {
+        "user-id": config.NEUTRINO_API_USER_ID,
+        "api-key": config.NEUTRINO_API_KEY,
+        "email": mail
+    }
+
+    try:
+        response = requests.post(url, data=data, timeout=5)
+        if response.status_code == 200:
+            result = response.json()
+            print(f"call proso, rezultat je {result}")
+            return result.get("valid", False)
+        else:
+            print(f"res los response: {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"rest call probo {e}")
+        return False
 

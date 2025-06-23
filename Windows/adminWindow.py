@@ -9,15 +9,17 @@ import os
 import urllib.request
 
 from Data.Helpers import jsonLogger, XMLBlacklist
-from Data.Helpers.XMLBlacklist import load_blacklist
+from Data.Helpers.XMLBlacklist import loadBlacklist
+from Data.userSession import UserSession
 
 
 class AdminWindow(QDialog):
-    def __init__(self):
+    loginSession = UserSession.instance()
+    def __init__(self, chatWindow):
         super().__init__()
         self.setWindowTitle("Admin Panel")
         self.resize(900, 400)
-
+        self.chatWindow = chatWindow
         layout = QVBoxLayout()
         self.dbManager = database.DatabaseManager.instance()
         self.btnEdit = QPushButton("Uredi")
@@ -46,7 +48,7 @@ class AdminWindow(QDialog):
         blacklist_group = QGroupBox("Blacklistane riječi")
         blacklist_layout = QVBoxLayout()
 
-        words = XMLBlacklist.load_blacklist()
+        words = XMLBlacklist.loadBlacklist()
 
         self.blacklist_list = QListWidget()
         print(f"[DEBUG] Blacklist loaded: {words}")
@@ -155,6 +157,8 @@ class AdminWindow(QDialog):
             if response.status_code == 200:
                 QMessageBox.information(self, "Uspjeh", "Korisnik ažuriran.")
                 self.loadUsers()
+                self.chatWindow.loadContacts()
+                jsonLogger.writeLog(self.loginSession.getCurrentUsername(), "Korisnički podatci su ažurirani")
             else:
                 QMessageBox.warning(self, "Greška", "Ažuriranje nije uspjelo.")
         except Exception as e:
@@ -190,8 +194,9 @@ class AdminWindow(QDialog):
                 response = requests.delete(f"http://localhost:5000/api/delete_user/{user_id}")
                 if response.status_code == 200:
                     QMessageBox.information(self, "Uspjeh", f"Korisnik '{username}' je obrisan.")
-                    jsonLogger.delete_logs_by_username(username)
+                    jsonLogger.deleteLogByUsername(username)
                     self.loadUsers()
+                    self.chatWindow.loadContacts()
                 else:
                     QMessageBox.warning(self, "Greška", "Brisanje nije uspjelo.")
             except Exception as e:
@@ -236,18 +241,21 @@ class AdminWindow(QDialog):
 
         pdf.output(output_path)
         QMessageBox.information(self, "Uspjeh", f"PDF je generiran:\n{filename}")
+        jsonLogger.writeLog(self.loginSession.getCurrentUsername(), "PDF uspješno generiran")
 
     def addWordToBlacklist(self):
         word, ok = QInputDialog.getText(self, "Dodaj riječ", "Unesi novu riječ:")
         if ok and word:
-            XMLBlacklist.add_word_to_blacklist(word)
+            XMLBlacklist.addWordToBlacklist(word)
             self.blacklist_list.addItem(word)
+        jsonLogger.writeLog(self.loginSession.getCurrentUsername(), "Nova riječ dodana u blacklistu")
 
     def removeWordFromBlacklist(self):
         selected_items = self.blacklist_list.selectedItems()
         for item in selected_items:
-            XMLBlacklist.remove_word_from_blacklist(item.text())
+            XMLBlacklist.removeWordFromBlacklist(item.text())
             self.blacklist_list.takeItem(self.blacklist_list.row(item))
+        jsonLogger.writeLog(self.loginSession.getCurrentUsername(), "Riječ izbrisana iz blackliste")
 
     def updateWordInBlacklist(self):
         selected_items = self.blacklist_list.selectedItems()
@@ -255,5 +263,5 @@ class AdminWindow(QDialog):
             old_word = selected_items[0].text()
             new_word, ok = QInputDialog.getText(self, "Uredi riječ", "Nova vrijednost:", text=old_word)
             if ok and new_word and new_word != old_word:
-                XMLBlacklist.update_word_in_blacklist(old_word, new_word)
+                XMLBlacklist.updateWordInBlacklist(old_word, new_word)
                 selected_items[0].setText(new_word)

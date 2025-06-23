@@ -41,7 +41,7 @@ def prepId(var:str):
     hashedId = hashSHA256(encryptedId)
     return hashedId
 
-# AES za lozinke
+# AES za ostale podatke
 def encryptAES(plain_text: str) -> str:
     cipher = AES.new(AES_KEY, AES.MODE_CBC, AES_IV)
     encrypted_bytes = cipher.encrypt(pad(plain_text.encode(), AES.block_size))
