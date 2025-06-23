@@ -32,15 +32,6 @@ def encryptRSA(plain_text: str):
 
     return base64.b64encode(encrypted).decode()
 
-def decryptRSA(encrypted_text: str):
-    with open("files/private_key.pem", "rb") as priv_file:
-        private_key = RSA.import_key(priv_file.read())
-
-    cipher_rsa = PKCS1_OAEP.new(private_key)
-    decrypted = cipher_rsa.decrypt(base64.b64decode(encrypted_text))
-
-    return decrypted.decode()
-
 def hashSHA256(id:str):
     primary_key = hashlib.sha256(id.encode()).hexdigest()
     return primary_key

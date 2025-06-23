@@ -249,13 +249,17 @@ class ChatWindow(QMainWindow):
             print(f"Path je {path} i ime je {name}")
             try:
                 with open(path, 'rb') as f:
-                    raw_data = f.read()
-                    attachment_data = base64.b64encode(raw_data).decode('utf-8') #b64 format za datoteku
+                    raw_attachment_data = f.read()
+                    attachment_size = len(raw_attachment_data)
                     attachment_name = name
                     message = message.replace(f"📎 {name}", "").strip()
             except Exception as e:
                 print(f"[ATTACHMENT ERROR] Ne mogu učitati privitak: {e}")
                 self.selectedAttachment = None
+        else:
+            raw_attachment_data = False
+            attachment_size = 0
+            attachment_name = ""
         print(f"Dosao do payloada, attachementdata je {attachment_data} i ime je {attachment_name}")
         payload = {
             'type': 'chat_message',
@@ -264,13 +268,19 @@ class ChatWindow(QMainWindow):
             'to': idReceiver,
             'content': message,
             'timestamp': timestamp.isoformat(),
-            'attachment': attachment_data,
-            'attachment_name': attachment_name
+            'has_attachment': bool(raw_attachment_data),
+            'attachment_name': attachment_name,
+            'attachment_size': attachment_size
         }
-
+        print("Ovo je nakon payloda")
         try:
-            print(f"[DEBUG] Slanje: {json.dumps(payload)}")
+            print("Probaj poslat json")
             self.tcp_socket.sendall((json.dumps(payload) + "\n").encode("utf-8"))
+            print("Json poslan")
+            if raw_attachment_data:
+                print("Pouruka ima attachement, poslaji")
+                self.tcp_socket.sendall(raw_attachment_data)
+                print("Poslan je attachment")
             self.messageLine.clear()
             self.selectedAttachment = None
             jsonLogger.write_log(self.loginSession.getCurrentUsername(), "Poruka poslana")

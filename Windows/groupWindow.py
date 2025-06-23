@@ -7,8 +7,8 @@ from Data.Helpers import cryptoFunctions
 from Data.userSession import UserSession
 
 dbManager = database.DatabaseManager.instance() #zasto je db connector van group windowa? nije li ovo
+loginSession = UserSession()
 class MultiSelectDropdown(QWidget):
-    loginSession = UserSession()
     def __init__(self, parent=None):
         super().__init__(parent)
         self.comboBox = QComboBox(self)
@@ -21,7 +21,7 @@ class MultiSelectDropdown(QWidget):
         self.comboBox.setModel(self.model)
 
         # Add checkable items
-        dbManager.instance().getAllUsers(self.loginSession.getCurrentId(), callback=self.populateUserList)
+        dbManager.instance().getAllUsers(loginSession.getCurrentId(), callback=self.populateUserList)
 
 
         # event filter to catch clicks on checkboxes
@@ -89,6 +89,11 @@ class GroupWindow(QWidget):
         groupname = self.groupName.text()
         members = self.dropdown.getSelectedItems()
         groupId = cryptoFunctions.prepId(groupname)
+
+        current_username = loginSession.getCurrentUsername()
+        if current_username not in members:
+            members.append(current_username)
+
         print(f"[DEBUG] Insert group called with ID: {groupId}")
         def onGroupCreated(_):
             self.insertNextMember(members, groupId, 0)
