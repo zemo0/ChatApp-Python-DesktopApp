@@ -284,7 +284,7 @@ class ChatWindow(QMainWindow):
             self.messageLine.clear()
             self.selectedAttachment = None
             jsonLogger.write_log(self.loginSession.getCurrentUsername(), "Poruka poslana")
-            QTimer.singleShot(1000, lambda: self.loadChatsBetweenUsers(idSender, idReceiver))
+            QTimer.singleShot(1000, lambda: self.reloadChat(idReceiver))
         except Exception as e:
             print(f"[SEND ERROR] {e}")
 
@@ -297,11 +297,14 @@ class ChatWindow(QMainWindow):
         )
 
     def filterUsers(self, contacts, inputUsername):
-        for username, user_id in contacts:
-            if inputUsername.lower() in username.lower():
-                item = QStandardItem(username)
-                item.setData(user_id, Qt.ItemDataRole.UserRole)
-                self.contactsModel.appendRow(item)
+        if inputUsername == "":
+            self.loadContacts()
+        else:
+            for username, user_id in contacts:
+                if inputUsername.lower() in username.lower():
+                    item = QStandardItem(username)
+                    item.setData(user_id, Qt.ItemDataRole.UserRole)
+                    self.contactsModel.appendRow(item)
 
     def getSelectedContact(self):
         print("U get selected contact selection je")
@@ -428,14 +431,11 @@ class ChatWindow(QMainWindow):
         ))
 
     @pyqtSlot()
-    def reloadChat(self):
-        selection, selectionId = self.getSelectedContact()
-        print(f"seleciton is {selection} and id is {selectionId}")
-        if self.dbManager.isGroup(selectionId):
-            self.loadGroupChat(selectionId)
+    def reloadChat(self, receiverId):
+        if self.dbManager.isGroup(receiverId):
+            self.loadGroupChat(receiverId)
         else:
-            print(f"The currently selected contact is {selection}")
-            self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), selectionId)
+            self.loadChatsBetweenUsers(self.loginSession.getCurrentId(), receiverId)
 
     def closeEvent(self, event):
         self.notifyServerOfflineUDP()

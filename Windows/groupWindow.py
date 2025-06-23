@@ -1,7 +1,8 @@
 from PyQt6 import uic
-from PyQt6.QtCore import QEvent, Qt
+from PyQt6.QtCore import QEvent, Qt, QTimer
 from PyQt6.QtGui import QStandardItem, QStandardItemModel
-from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QComboBox, QPushButton, QWidget, QLabel, QLineEdit, QSizePolicy
+from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QComboBox, QPushButton, QWidget, QLabel, QLineEdit, QSizePolicy, \
+    QMessageBox, QInputDialog
 from Data import database
 from Data.Helpers import cryptoFunctions
 from Data.userSession import UserSession
@@ -9,22 +10,17 @@ from Data.userSession import UserSession
 dbManager = database.DatabaseManager.instance() #zasto je db connector van group windowa? nije li ovo
 loginSession = UserSession()
 class MultiSelectDropdown(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, chatWindow=None):
+        super().__init__()
+        self.chatWindow = chatWindow
         self.comboBox = QComboBox(self)
         self.comboBox.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.comboBox.setEditable(False)
         self.comboBox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
 
-        # model for checkable items
         self.model = QStandardItemModel()
         self.comboBox.setModel(self.model)
-
-        # Add checkable items
         dbManager.instance().getAllUsers(loginSession.getCurrentId(), callback=self.populateUserList)
-
-
-        # event filter to catch clicks on checkboxes
         self.comboBox.view().viewport().installEventFilter(self)
 
     def populateUserList(self, users):
@@ -63,8 +59,9 @@ class MultiSelectDropdown(QWidget):
         ]
 
 class GroupWindow(QWidget):
-    def __init__(self):
+    def __init__(self, chatWindow=None):
         super().__init__()
+        self.chatWindow = chatWindow
         self.window_width, self.window_height = 500, 250
         self.setMinimumSize(self.window_width, self.window_height)
 
@@ -77,17 +74,32 @@ class GroupWindow(QWidget):
 
         self.groupName.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
-        self.dropdown = MultiSelectDropdown()
-        self.layout.addWidget(self.dropdown)
+        self.dropdownUsers = MultiSelectDropdown()
+        self.layout.addWidget(self.dropdownUsers)
 
-        self.button = QPushButton("Retrieve")
-        self.layout.addWidget(self.button)
+        self.createGroupButton = QPushButton("Napravi")
+        self.layout.addWidget(self.createGroupButton)
 
-        self.button.clicked.connect(self.buttonIsClicked)
+        self.groupDropdown = QComboBox()
+        self.layout.addWidget(QLabel("Odaberi grupu:"))
+        self.layout.addWidget(self.groupDropdown)
+
+        self.editGroupButton = QPushButton("Izmjeni")
+        self.layout.addWidget(self.editGroupButton)
+
+        self.deleteGroupButton = QPushButton("Izbriši")
+        self.layout.addWidget(self.deleteGroupButton)
+
+        #popuna liste grupa
+        dbManager.getGroupsByUserId(loginSession.getCurrentId(), callback=self.onGroupsFetched)
+
+        self.createGroupButton.clicked.connect(self.buttonIsClicked)
+        self.editGroupButton.clicked.connect(self.editGroup)
+        self.deleteGroupButton.clicked.connect(self.deleteGroup)
 
     def buttonIsClicked(self):
         groupname = self.groupName.text()
-        members = self.dropdown.getSelectedItems()
+        members = self.dropdownUsers.getSelectedItems()
         groupId = cryptoFunctions.prepId(groupname)
 
         current_username = loginSession.getCurrentUsername()
@@ -114,3 +126,55 @@ class GroupWindow(QWidget):
             dbManager.instance().insertGroupMember(idInDb, groupId, userId, callback=onMemberInserted)
 
         dbManager.instance().getIdByUsername(member, callback=onUserIdReceived)
+
+    def editGroup(self):
+        index = self.groupDropdown.currentIndex()
+        if index == -1:
+            QMessageBox.warning(self, "Upozorenje", "Odaberite grupu.")
+            return
+
+        current_name = self.groupDropdown.currentText()
+        group_id = self.groupDropdown.currentData()
+
+        new_name, ok = QInputDialog.getText(self, "Preimenuj grupu", f"Novo ime za grupu '{current_name}':")
+        if ok and new_name.strip():
+            dbManager.updateGroupName(group_id, new_name.strip(), callback=lambda _: self.loadUserGroups())
+            QTimer.singleShot(1000, self.chatWindow.loadContacts)
+
+
+    def deleteGroup(self):
+        index = self.groupDropdown.currentIndex()
+        if index == -1:
+            QMessageBox.warning(self, "Upozorenje", "Odaberite grupu.")
+            return
+
+        group_name = self.groupDropdown.currentText()
+        group_id = self.groupDropdown.currentData()
+
+        reply = QMessageBox.question(
+            self,
+            "Potvrda brisanja",
+            f"Jeste li sigurni da želite izbrisati grupu '{group_name}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            dbManager.deleteGroupById(group_id, callback=lambda _: self.loadUserGroups())
+            QTimer.singleShot(1000, self.chatWindow.loadContacts)
+
+    def loadUserGroups(self):
+        user_id = loginSession.getCurrentId()
+
+        def onGroupsFetched(groups):
+            self.groupDropdown.clear()
+            if groups:
+                for name, group_id in groups:
+                    self.groupDropdown.addItem(name, userData=group_id)
+
+        dbManager.getGroupsByUserId(user_id, callback=onGroupsFetched)
+
+    def onGroupsFetched(self, groups):
+        self.groupDropdown.clear()
+        if groups:
+            for name, group_id in groups:
+                self.groupDropdown.addItem(name, userData=group_id)

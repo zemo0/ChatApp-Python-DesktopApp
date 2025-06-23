@@ -70,5 +70,59 @@
         "username": "admin",
         "action": "Poruka poslana",
         "timestamp": "2025-06-23T10:09:16.719330"
+    },
+    {
+        "id": 13,
+        "username": "admin",
+        "action": "Poruka poslana",
+        "timestamp": "2025-06-23T10:16:09.339823"
+    },
+    {
+        "id": 14,
+        "username": "admin",
+        "action": "Poruka poslana",
+        "timestamp": "2025-06-23T10:17:04.513992"
+    },
+    {
+        "id": 15,
+        "username": "admin",
+        "action": "Poruka poslana",
+        "timestamp": "2025-06-23T10:17:12.052675"
+    },
+    {
+        "id": 16,
+        "username": "admin",
+        "action": "Poruka poslana",
+        "timestamp": "2025-06-23T10:17:28.562964"
+    },
+    {
+        "id": 17,
+        "username": "ivan_zeman",
+        "action": "Poruka poslana",
+        "timestamp": "2025-06-23T10:18:14.644514"
+    },
+    {
+        "id": 18,
+        "username": "ivan_zeman",
+        "action": "Poruka poslana",
+        "timestamp": "2025-06-23T10:24:12.166525"
+    },
+    {
+        "id": 19,
+        "username": "admin",
+        "action": "Poruka poslana",
+        "timestamp": "2025-06-23T11:08:30.387030"
+    },
+    {
+        "id": 20,
+        "username": "admin",
+        "action": "Poruka poslana",
+        "timestamp": "2025-06-23T11:13:16.647937"
+    },
+    {
+        "id": 21,
+        "username": "admin",
+        "action": "Poruka poslana",
+        "timestamp": "2025-06-23T11:13:19.590769"
     }
 ]

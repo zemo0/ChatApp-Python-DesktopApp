@@ -32,7 +32,7 @@ class Main(QMainWindow):
         self.chatWindow.startUdpListener()
         self.chatWindow.connectToTCPServer()
         print("ChatScreen showing")
-        self.groupWindow = GroupWindow()
+        self.groupWindow = GroupWindow(chatWindow=self.chatWindow)
         self.settingsWindow = SettingsWindow()
         self.chatWindow.show()
         self.chatWindow.loadContacts()

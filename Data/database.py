@@ -168,16 +168,20 @@ class DatabaseManager(QObject):
             cursor = conn.cursor()
             try:
                 cursor.execute("""
-                    SELECT DISTINCT contact_name,contact_id
+                    SELECT DISTINCT contact_name, contact_id
                     FROM (
                         SELECT u.ID AS contact_id, u.username AS contact_name
                         FROM user u
                         WHERE u.ID != %s
+    
                         UNION
+                        
                         SELECT g.ID AS contact_id, g.name AS contact_name
                         FROM chat_group g
+                        INNER JOIN chat_group_members gm ON g.ID = gm.IDGroup
+                        WHERE gm.IDUser = %s
                     ) AS contacts;
-                """, (currentUserId,))
+                """, (currentUserId, currentUserId))
                 result = cursor.fetchall()
                 print(f"Rezultat getallcontacts je {result}")
                 final_result = []
@@ -516,6 +520,52 @@ class DatabaseManager(QObject):
                 conn.close()
             return affected
         self.runAsync(query, callback, use_mutex=True)
+
+    def getGroupsByUserId(self, user_id, callback):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                SELECT g.name, g.ID
+                FROM chat_group g
+                INNER JOIN chat_group_members gm ON gm.IDGroup = g.ID
+                WHERE gm.IDUser = %s
+            """, (user_id,))
+                result = cursor.fetchall()
+                return result if result else None
+            finally:
+                cursor.close()
+                conn.close()
+        self.runAsync(query, callback)
+
+    def updateGroupName(self, group_id, new_name, callback):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("UPDATE chat_group SET name = %s WHERE ID = %s", (new_name, group_id))
+                conn.commit()
+            finally:
+                cursor.close()
+                conn.close()
+        self.runAsync(query, callback)
+
+
+    def deleteGroupById(self, group_id, callback):
+        def query():
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("DELETE FROM message WHERE GroupID = %s", (group_id,))
+                cursor.execute("DELETE FROM chat_group_members WHERE IDGroup = %s", (group_id,))
+                cursor.execute("DELETE FROM chat_group WHERE ID = %s", (group_id,))
+                conn.commit()
+            finally:
+                cursor.close()
+                conn.close()
+            return True
+        self.runAsync(query, callback)
 
 
     def close(self):
