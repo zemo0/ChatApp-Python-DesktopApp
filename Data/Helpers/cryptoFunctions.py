@@ -11,6 +11,7 @@ if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 from config import AES_KEY, AES_IV
 from Crypto.Util.Padding import unpad, pad
+
 possible_peppers = ["Kotanyi", "Franck", "Sallant", "Sana", "Crni"]
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # OVO NE KORISTIT VIŠE, SAMO JEDAN PUT JE POTREBNO
@@ -24,7 +25,7 @@ possible_peppers = ["Kotanyi", "Franck", "Sallant", "Sana", "Crni"]
 
 #RSA za ideve
 def encryptRSA(plain_text: str):
-    with open("files/public_key.pem", "rb") as pub_file:
+    with open("Files/public_key.pem", "rb") as pub_file:
         public_key = RSA.import_key(pub_file.read())
 
     cipher_rsa = PKCS1_OAEP.new(public_key)
@@ -41,7 +42,7 @@ def prepId(var:str):
     hashedId = hashSHA256(encryptedId)
     return hashedId
 
-# AES za ostale podatke
+# AES za enkripciju korisničkih podataka
 def encryptAES(plain_text: str) -> str:
     cipher = AES.new(AES_KEY, AES.MODE_CBC, AES_IV)
     encrypted_bytes = cipher.encrypt(pad(plain_text.encode(), AES.block_size))
@@ -53,7 +54,7 @@ def decryptAES(encrypted_b64: str) -> str:
     decrypted = unpad(cipher.decrypt(encrypted_bytes), AES.block_size)
     return decrypted.decode()
 
-def encryptThenHash(password: str, username: str) -> str:
+def hashThePassword(password: str, username: str) -> str:
     salt = username[::-1]
     pepper = random.choice(possible_peppers)
     combined = pepper + password + salt

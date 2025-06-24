@@ -20,12 +20,14 @@ class MessageHandler(socketserver.BaseRequestHandler):
         buffer = b""
         try:
             while True:
+                #socket veza koja prima 4096 bajtova
                 data = self.request.recv(4096)
                 if not data:
                     break
                 buffer += data
 
                 while b'\n' in buffer:
+                    #podjeli json i attachment
                     line, buffer = buffer.split(b'\n', 1)
                     if not line.strip():
                         continue
@@ -36,7 +38,9 @@ class MessageHandler(socketserver.BaseRequestHandler):
                             expected = msg['attachment_size']
                             print(f"Ocekivana velicina je {expected}")
                             while len(buffer) < expected:
+                                #ako attachment jos nije stigao nastavi citati podatke s klijenta
                                 buffer += self.request.recv(4096)
+                            #attachment podataka je velicina koja ocekujemo u bufferu 0 -> len(attachment_size
                             attachment_blob = buffer[:expected]
                             buffer = buffer[expected:]
                         else:

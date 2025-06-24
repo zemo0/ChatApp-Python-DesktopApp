@@ -1,13 +1,12 @@
 import os
 import pickle
-import sys
 
 class UserSession:
     _instance = None
 
     def __init__(self):
         if UserSession._instance is not None:
-            raise Exception("Use UserSession.instance() to get the singleton instance.")
+            raise Exception("Zovi UserSession.instance()")
         self.user_id = None
         self.username = None
         self.session_dir = os.path.join(os.path.dirname(__file__), "Helpers", "SessionData")

@@ -53,7 +53,7 @@ class RegistrationWindow(QMainWindow):
                 self.infoLabel.setText("")
 
             storedId = cryptoFunctions.prepId(usernameInput)
-            passwordHash = cryptoFunctions.encryptThenHash(passwordInput, usernameInput)
+            passwordHash = cryptoFunctions.hashThePassword(passwordInput, usernameInput)
 
             encryptedName = cryptoFunctions.encryptAES(nameInput)
             encryptedSurname = cryptoFunctions.encryptAES(surnameInput)

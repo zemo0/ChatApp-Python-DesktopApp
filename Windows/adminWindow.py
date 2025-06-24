@@ -76,6 +76,7 @@ class AdminWindow(QDialog):
 
         self.setLayout(layout)
         self.loadUsers()
+
     def loadUsers(self):
         self.dbManager.getAllUsersFullInfo(callback=self.populateTable)
 
@@ -209,9 +210,7 @@ class AdminWindow(QDialog):
             return
 
         font_filename = "NotoSans-Regular.ttf"
-
         font_path = os.path.join(os.getcwd(), font_filename)
-
         filename = f"grupni_izvjestaj_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         output_path = os.path.join(os.getcwd(), filename)
 

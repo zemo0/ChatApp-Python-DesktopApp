@@ -36,7 +36,7 @@ class DatabaseManager(QObject):
     def __init__(self):
         super().__init__()
         if DatabaseManager._instance is not None:
-            raise Exception("Use DatabaseManager.instance()")
+            raise Exception("Koristi DatabaseManager.instance()")
         try:
             self.pool = mysql.connector.pooling.MySQLConnectionPool(
                 pool_name="mypool",

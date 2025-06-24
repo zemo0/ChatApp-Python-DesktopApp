@@ -12,28 +12,6 @@ REG_PATH = r"SOFTWARE\ChatApp"
 REG_NAME = "FontSize"
 
 
-def readFontSize():
-    try:
-        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_READ)
-        value, _ = winreg.QueryValueEx(key, REG_NAME)
-        winreg.CloseKey(key)
-        return int(value)
-    except FileNotFoundError:
-        return 12
-    except Exception as e:
-        print(f"Greška s registrom: {e}")
-        return 12
-
-
-def writeFontSize(font_size):
-    try:
-        key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, REG_PATH)
-        winreg.SetValueEx(key, REG_NAME, 0, winreg.REG_SZ, str(font_size))
-        winreg.CloseKey(key)
-    except Exception as e:
-        print(f"windows regitar greska: {e}")
-
-
 class SettingsWindow(QDialog):
     loginSession = UserSession.instance()
     def __init__(self, parent=None):
@@ -96,7 +74,7 @@ class SettingsWindow(QDialog):
         y_pos = self.y_spinbox.value()
 
         self.apply_settings(theme, font_size, x_pos, y_pos)
-
+        #zatvara prozor
         self.accept()
 
     def loadSettings(self, chatWindow, groupWindow):
@@ -158,3 +136,23 @@ class SettingsWindow(QDialog):
         with open(INI_PATH, 'w') as configfile:
             self.config.write(configfile)
 
+def readFontSize():
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_READ)
+        value, _ = winreg.QueryValueEx(key, REG_NAME)
+        winreg.CloseKey(key)
+        return int(value)
+    except FileNotFoundError:
+        return 12
+    except Exception as e:
+        print(f"Greška s registrom: {e}")
+        return 12
+
+
+def writeFontSize(font_size):
+    try:
+        key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, REG_PATH)
+        winreg.SetValueEx(key, REG_NAME, 0, winreg.REG_SZ, str(font_size))
+        winreg.CloseKey(key)
+    except Exception as e:
+        print(f"windows regitar greska: {e}")

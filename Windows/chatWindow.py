@@ -119,7 +119,7 @@ class ChatWindow(QMainWindow):
                     continue
                 except Exception as e:
                     print(f"UDP listener baci exception: {e}")
-                    continue ##ovo fixat, nije u redu tako ostavut
+                    continue
         threading.Thread(target=listen, daemon=True).start()
 
     def notifyServerOnlineUDP(self):
@@ -135,6 +135,7 @@ class ChatWindow(QMainWindow):
     def fetchOnlineUsersUDP(self):
         try:
             self.udp_socket.sendto("LIST_ONLINE".encode(), ("localhost", self.udp_port))
+            #ako ne dode odgovor za 2 sekunde timeout
             self.udp_socket.settimeout(2.0)
             data, _ = self.udp_socket.recvfrom(4096)
             user_list = data.decode().split(",") if data else []
@@ -233,6 +234,7 @@ class ChatWindow(QMainWindow):
         if check.returncode != 0:
             QMessageBox.warning(self, "Upozorenje", "Poruka sadrži nedozvoljene riječi i nije poslana.")
             return
+
         print("Poruka nema blacklistanih rijeci, idi dalje")
         attachment_data = None
         attachment_name = None

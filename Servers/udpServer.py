@@ -7,7 +7,6 @@ user_addresses = {}
 lock = threading.Lock()
 
 def handle_message(message, addr, server_socket):
-    global online_users, user_addresses
 
     with lock:
         if message.startswith("ONLINE:"):
